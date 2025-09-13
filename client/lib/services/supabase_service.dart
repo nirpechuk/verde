@@ -152,24 +152,83 @@ class SupabaseService {
     }
   }
 
+  // Get user's specific vote on an issue (returns -1, 1, or null if not voted)
+  static Future<int?> getUserVoteOnIssue(String issueId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      final response = await _client
+          .from('issue_votes')
+          .select('vote')
+          .eq('issue_id', issueId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      return response?['vote'];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get detailed voting statistics for an issue
+  static Future<Map<String, int>> getIssueVoteStats(String issueId) async {
+    try {
+      final response = await _client
+          .from('issue_votes')
+          .select('vote')
+          .eq('issue_id', issueId);
+      
+      int upvotes = 0;
+      int downvotes = 0;
+      
+      for (final vote in response) {
+        if (vote['vote'] == 1) {
+          upvotes++;
+        } else if (vote['vote'] == -1) {
+          downvotes++;
+        }
+      }
+      
+      return {
+        'upvotes': upvotes,
+        'downvotes': downvotes,
+        'total': upvotes + downvotes,
+        'score': upvotes - downvotes,
+      };
+    } catch (e) {
+      return {
+        'upvotes': 0,
+        'downvotes': 0,
+        'total': 0,
+        'score': 0,
+      };
+    }
+  }
+
   static Future<void> voteOnIssue(String issueId, int vote) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
     // Check if user has already voted
-    final hasVoted = await hasUserVotedOnIssue(issueId);
-    if (hasVoted) {
-      throw Exception('You have already voted on this issue');
+    final currentVote = await getUserVoteOnIssue(issueId);
+    
+    if (currentVote == vote) {
+      throw Exception('You have already cast this vote on this issue');
     }
 
-    await _client.from('issue_votes').insert({
+    // Use upsert to handle both new votes and vote changes
+    // Specify onConflict to handle the unique constraint on (issue_id, user_id)
+    await _client.from('issue_votes').upsert({
       'issue_id': issueId,
       'user_id': user.id,
       'vote': vote,
-    });
+    }, onConflict: 'issue_id,user_id');
 
-    // Award points for voting
-    await _awardPoints('vote_issue', 1, issueId);
+    // Award points for voting (only if it's a new vote, not a change)
+    if (currentVote == null) {
+      await _awardPoints('vote_issue', 1, issueId);
+    }
   }
 
   // Event methods

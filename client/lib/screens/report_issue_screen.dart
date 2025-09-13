@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
 
 import '../models/issue.dart';
 import '../models/marker.dart';
@@ -35,6 +36,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   bool _hasGenerated = false;
   bool _showEditFields = false;
   late LatLng _selectedLocation;
+  Placemark? _placemark;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -42,6 +44,23 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   void initState() {
     super.initState();
     _selectedLocation = widget.initialLocation;
+    _fetchPlacemark();
+  }
+
+  Future<void> _fetchPlacemark() async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        _selectedLocation.latitude,
+        _selectedLocation.longitude,
+      );
+      setState(() {
+        _placemark = placemarks.isNotEmpty ? placemarks[0] : null;
+      });
+    } catch (e) {
+      setState(() {
+        _placemark = null;
+      });
+    }
   }
 
   Future<void> _pickImage() async {
@@ -160,6 +179,37 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     }
   }
 
+  String _formatAddress(Placemark placemark) {
+    final parts = <String>[];
+    
+    // Add street address
+    if (placemark.street != null && placemark.street!.isNotEmpty) {
+      parts.add(placemark.street!);
+    }
+    
+    // Add locality (city)
+    if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+      parts.add(placemark.locality!);
+    }
+    
+    // Add administrative area (state/province)
+    if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
+      parts.add(placemark.administrativeArea!);
+    }
+    
+    // Add postal code
+    if (placemark.postalCode != null && placemark.postalCode!.isNotEmpty) {
+      parts.add(placemark.postalCode!);
+    }
+    
+    // Add country
+    if (placemark.country != null && placemark.country!.isNotEmpty) {
+      parts.add(placemark.country!);
+    }
+    
+    return parts.isNotEmpty ? parts.join(', ') : 'Unknown location';
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -198,6 +248,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                       setState(() {
                         _selectedLocation = result;
                       });
+                      _fetchPlacemark();
                     }
                   },
                   child: Padding(
@@ -220,8 +271,11 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
-                          'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                          // 'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
+                          // 'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                          _placemark != null
+                              ? _formatAddress(_placemark!)
+                              : 'Loading location...',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 4),
