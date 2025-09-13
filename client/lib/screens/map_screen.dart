@@ -96,7 +96,47 @@ class _MapScreenState extends State<MapScreen> {
   List<Marker> _buildFlutterMapMarkers() {
     List<Marker> mapMarkers = [];
 
-    // Add issue markers (red)
+    // Add current location marker first (so it appears behind other markers)
+    mapMarkers.add(
+      Marker(
+        point: _currentLocation,
+        width: 40,
+        height: 40,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer pulse ring
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+            ),
+            // Inner location dot
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Add issue markers (red) - these will appear on top
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
       mapMarkers.add(
         Marker(
@@ -178,45 +218,6 @@ class _MapScreenState extends State<MapScreen> {
       );
     }
 
-    // Add current location marker (blue with pulse effect)
-    mapMarkers.add(
-      Marker(
-        point: _currentLocation,
-        width: 40,
-        height: 40,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer pulse ring
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-            ),
-            // Inner location dot
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
 
     return mapMarkers;
   }

@@ -44,8 +44,11 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         });
       } else {
         final event = await SupabaseService.getEventByMarkerId(widget.marker.id);
+        final rsvpStatus = await SupabaseService.getUserRsvpStatus(event.id);
         setState(() {
           _event = event;
+          _hasRsvped = rsvpStatus != null;
+          _rsvpStatus = rsvpStatus ?? 'not_going';
         });
       }
     } catch (e) {
@@ -148,8 +151,20 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       widget.onDataChanged();
       await _loadMarkerDetails(); // Refresh to get updated participant count
     } catch (e) {
+      String errorMessage = 'Error with RSVP: $e';
+      if (e.toString().contains('duplicate key')) {
+        errorMessage = 'RSVP status updated!';
+        setState(() {
+          _hasRsvped = true;
+          _rsvpStatus = status;
+        });
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error with RSVP: $e')),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: e.toString().contains('duplicate key') ? Colors.blue : Colors.red,
+        ),
       );
     }
   }
@@ -366,10 +381,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        if (!_hasRsvped && !_event!.isFull) ...[
-          const Text(
-            'Will you attend this event?',
-            style: TextStyle(fontWeight: FontWeight.bold),
+        if (!_event!.isFull) ...[
+          Text(
+            _hasRsvped ? 'Update your RSVP:' : 'Will you attend this event?',
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Column(
@@ -378,10 +393,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _rsvpToEvent('going'),
-                  icon: const Icon(Icons.check_circle),
-                  label: const Text('Yes, I\'m going! (+5 Points)'),
+                  icon: Icon(_rsvpStatus == 'going' ? Icons.check_circle : Icons.check_circle_outline),
+                  label: Text(_rsvpStatus == 'going' ? 'Going!' : 'Yes, I\'m going! (+5 Points)'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: _rsvpStatus == 'going' ? Colors.green.shade700 : Colors.green,
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -391,14 +406,29 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _rsvpToEvent('maybe'),
-                  icon: const Icon(Icons.help),
-                  label: const Text('Maybe'),
+                  icon: Icon(_rsvpStatus == 'maybe' ? Icons.help : Icons.help_outline),
+                  label: Text(_rsvpStatus == 'maybe' ? 'Maybe going' : 'Maybe'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
+                    backgroundColor: _rsvpStatus == 'maybe' ? Colors.orange.shade700 : Colors.orange,
                     foregroundColor: Colors.white,
                   ),
                 ),
               ),
+              if (_hasRsvped) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _rsvpToEvent('not_going'),
+                    icon: Icon(_rsvpStatus == 'not_going' ? Icons.cancel : Icons.cancel_outlined),
+                    label: Text(_rsvpStatus == 'not_going' ? 'Not going' : 'Cancel RSVP'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _rsvpStatus == 'not_going' ? Colors.grey.shade700 : Colors.grey,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ] else if (_event!.isFull) ...[

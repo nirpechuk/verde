@@ -223,18 +223,49 @@ class SupabaseService {
     return Event.fromJson(response);
   }
 
+  static Future<String?> getUserRsvpStatus(String eventId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      final response = await _client
+          .from('event_rsvps')
+          .select('status')
+          .eq('event_id', eventId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      return response?['status'];
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<void> rsvpToEvent(String eventId, String status) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    await _client.from('event_rsvps').upsert({
-      'event_id': eventId,
-      'user_id': user.id,
-      'status': status,
-    });
+    // Check if user has already RSVPed
+    final existingStatus = await getUserRsvpStatus(eventId);
+    
+    if (existingStatus != null) {
+      // Update existing RSVP
+      await _client
+          .from('event_rsvps')
+          .update({'status': status})
+          .eq('event_id', eventId)
+          .eq('user_id', user.id);
+    } else {
+      // Create new RSVP
+      await _client.from('event_rsvps').insert({
+        'event_id': eventId,
+        'user_id': user.id,
+        'status': status,
+      });
+    }
 
-    // Award points for RSVP (only for 'going' status)
-    if (status == 'going') {
+    // Award points for RSVP (only for 'going' status and only if not previously going)
+    if (status == 'going' && existingStatus != 'going') {
       await _awardPoints('rsvp_event', 5, eventId);
     }
   }
