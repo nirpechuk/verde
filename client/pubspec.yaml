@@ -20,6 +20,7 @@ dependencies:
   http: ^1.5.0
   anthropic_sdk_dart: ^0.2.3
   geocoding: ^4.0.0
+  flutter_expandable_fab: ^2.5.2
 
 dev_dependencies:
   flutter_test:

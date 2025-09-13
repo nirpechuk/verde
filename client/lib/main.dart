@@ -21,8 +21,7 @@ class EcoActionApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EcoAction',
-      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      title: 'verde',
       home: const MapScreen(),
       debugShowCheckedModeBanner: false,
     );

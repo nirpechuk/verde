@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:client/helpers/fab.dart';
+import 'package:client/helpers/utils.dart';
 import '../models/marker.dart';
 import '../models/event.dart';
 import '../services/supabase_service.dart';
@@ -20,7 +22,10 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  LatLng _currentLocation = const LatLng(42.3601, -71.0589); // Default to Boston/MIT area
+  LatLng _currentLocation = const LatLng(
+    42.3601,
+    -71.0589,
+  ); // Default to Boston/MIT area
   List<AppMarker> _markers = [];
   List<Event> _events = [];
   bool _isLoading = true;
@@ -79,10 +84,19 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _loadMapData() async {
     try {
       // Load markers in current view bounds
-      final southwest = LatLng(_currentLocation.latitude - 0.971, _currentLocation.longitude - 0.971);
-      final northeast = LatLng(_currentLocation.latitude + 0.971, _currentLocation.longitude + 0.971);
-      
-      final markers = await SupabaseService.getMarkersInBounds(southwest, northeast);
+      final southwest = LatLng(
+        _currentLocation.latitude - 0.971,
+        _currentLocation.longitude - 0.971,
+      );
+      final northeast = LatLng(
+        _currentLocation.latitude + 0.971,
+        _currentLocation.longitude + 0.971,
+      );
+
+      final markers = await SupabaseService.getMarkersInBounds(
+        southwest,
+        northeast,
+      );
       final events = await SupabaseService.getEvents();
 
       setState(() {
@@ -111,7 +125,7 @@ class _MapScreenState extends State<MapScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.2),
+                color: Colors.blue.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
             ),
@@ -125,7 +139,7 @@ class _MapScreenState extends State<MapScreen> {
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -153,17 +167,13 @@ class _MapScreenState extends State<MapScreen> {
                 border: Border.all(color: Colors.white, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.warning,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.warning, color: Colors.white, size: 20),
             ),
           ),
         ),
@@ -202,7 +212,7 @@ class _MapScreenState extends State<MapScreen> {
                 border: Border.all(color: Colors.white, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -219,7 +229,6 @@ class _MapScreenState extends State<MapScreen> {
       );
     }
 
-
     return mapMarkers;
   }
 
@@ -227,10 +236,8 @@ class _MapScreenState extends State<MapScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MarkerDetailsScreen(
-          marker: marker,
-          onDataChanged: _loadMapData,
-        ),
+        builder: (context) =>
+            MarkerDetailsScreen(marker: marker, onDataChanged: _loadMapData),
       ),
     );
   }
@@ -246,16 +253,15 @@ class _MapScreenState extends State<MapScreen> {
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context) => const AuthScreen(
-            actionContext: 'to report an issue',
-          ),
+          builder: (context) =>
+              const AuthScreen(actionContext: 'to report an issue'),
         ),
       );
-      
+
       if (result != true) return; // User cancelled or didn't authenticate
       await _loadUserData(); // Refresh user data after auth
     }
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -275,16 +281,15 @@ class _MapScreenState extends State<MapScreen> {
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context) => const AuthScreen(
-            actionContext: 'to create an event',
-          ),
+          builder: (context) =>
+              const AuthScreen(actionContext: 'to create an event'),
         ),
       );
-      
+
       if (result != true) return; // User cancelled or didn't authenticate
       await _loadUserData(); // Refresh user data after auth
     }
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -303,16 +308,33 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EcoAction'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        title: Text(
+          'verde',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w300,
+            fontFamily: 'Pacifico',
+          ),
+        ),
+        titleTextStyle: const TextStyle(fontStyle: FontStyle.italic),
+        leading: FloatingActionButton(
+          heroTag: "theme_toggle",
+          onPressed: _toggleMapTheme,
+          backgroundColor: _isDarkMode ? lightBrown : darkGreen,
+          child: Icon(
+            _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+            color: tan,
+          ),
+        ),
+        backgroundColor: _isDarkMode ? darkBrown : lightGreen,
+        foregroundColor: _isDarkMode ? lightBrown : darkGreen,
         actions: [
           if (SupabaseService.isAuthenticated) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -359,9 +381,7 @@ class _MapScreenState extends State<MapScreen> {
               onPressed: () async {
                 final result = await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const AuthScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const AuthScreen()),
                 );
                 if (result == true) {
                   await _loadUserData();
@@ -394,46 +414,56 @@ class _MapScreenState extends State<MapScreen> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate: _isDarkMode 
-                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                  urlTemplate: _isDarkMode
+                      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
                   subdomains: const ['a', 'b', 'c', 'd'],
                   userAgentPackageName: 'com.example.ecoaction',
                   retinaMode: RetinaMode.isHighDensity(context),
                 ),
-                MarkerLayer(
-                  markers: _buildFlutterMapMarkers(),
-                ),
+                MarkerLayer(markers: _buildFlutterMapMarkers()),
               ],
             ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
+
+      floatingActionButton: Stack(
         children: [
-          FloatingActionButton(
-            heroTag: "theme_toggle",
-            onPressed: _toggleMapTheme,
-            backgroundColor: _isDarkMode ? Colors.yellow[700] : Colors.grey[800],
-            child: Icon(
-              _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: "report_issue",
-            onPressed: _onReportIssue,
-            backgroundColor: Colors.red,
-            child: const Icon(Icons.add_alert, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: "create_event",
-            onPressed: _onCreateEvent,
-            backgroundColor: Colors.green,
-            child: const Icon(Icons.add_circle, color: Colors.white),
+          ExpandableFab(
+            distance: kIconDistanceBetweenFab,
+            backgroundColor: _isDarkMode ? tan : lightGreen,
+            iconColor: _isDarkMode ? darkBrown : darkGreen,
+            children: [
+              ActionButton(
+                onPressed: _onCreateEvent,
+                backgroundColor: _isDarkMode ? tan : lightGreen,
+                iconColor: _isDarkMode ? darkBrown : darkGreen,
+                icon: const Icon(Icons.location_pin),
+              ),
+              ActionButton(
+                onPressed: _onReportIssue,
+                backgroundColor: _isDarkMode ? tan : lightGreen,
+                iconColor: _isDarkMode ? darkBrown : darkGreen,
+                icon: const Icon(Icons.add_alert),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 }
+
+
+
+// FloatingActionButton(
+//   heroTag: "report_issue",
+//   onPressed: _onReportIssue,
+//   backgroundColor: Colors.red,
+//   child: const Icon(Icons.add_alert, color: Colors.white),
+// ),
+
+// FloatingActionButton(
+//   heroTag: "create_event",
+//   onPressed: _onCreateEvent,
+//   backgroundColor: Colors.green,
+//   child: const Icon(Icons.add_circle, color: Colors.white),
+// ),
