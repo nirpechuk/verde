@@ -60,9 +60,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         await _analyzeImage();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error taking photo: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error taking photo: $e')));
     }
   }
 
@@ -80,14 +80,19 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       setState(() {
         _titleController.text = result['title'] ?? '';
         _descriptionController.text = result['description'] ?? '';
-        _selectedCategory =
-            Issue.categoryFromString(result['category'] ?? '');
+        _selectedCategory = Issue.categoryFromString(result['category'] ?? '');
         _hasGenerated = true;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error analyzing photo: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error analyzing photo: $e')));
+
+      setState(() {
+        // Allow manual entry if AI analysis fails
+        _hasGenerated = true;
+        _showEditFields = true;
+      });
     } finally {
       Navigator.of(context).pop();
     }
@@ -126,9 +131,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       widget.onIssueReported();
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error reporting issue: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error reporting issue: $e')));
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -201,7 +206,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const Spacer(),
-                            const Icon(Icons.edit_location, color: Colors.green),
+                            const Icon(
+                              Icons.edit_location,
+                              color: Colors.green,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -251,7 +259,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                                   children: [
                                     Text(
                                       'Photo Added',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     Text('Tap to change photo'),
                                   ],
@@ -262,7 +272,11 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                         : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.camera_alt, size: 40, color: Colors.grey),
+                              Icon(
+                                Icons.camera_alt,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 8),
                               Text('Tap to add photo'),
                             ],
@@ -340,8 +354,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               ],
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed:
-                    (_isSubmitting || !_hasGenerated) ? null : _submitIssue,
+                onPressed: (_isSubmitting || !_hasGenerated)
+                    ? null
+                    : _submitIssue,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -351,8 +366,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                         'Report Issue (+10 Points)',
-                        style:
-                            TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ],
@@ -362,4 +379,3 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     );
   }
 }
-
