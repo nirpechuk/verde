@@ -37,8 +37,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
     try {
       if (widget.marker.type == MarkerType.issue) {
         final issue = await SupabaseService.getIssueByMarkerId(widget.marker.id);
+        final hasVoted = await SupabaseService.hasUserVotedOnIssue(issue.id);
         setState(() {
           _issue = issue;
+          _hasVoted = hasVoted;
         });
       } else {
         final event = await SupabaseService.getEventByMarkerId(widget.marker.id);
@@ -88,8 +90,19 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       widget.onDataChanged();
       await _loadMarkerDetails(); // Refresh to get updated credibility score
     } catch (e) {
+      String errorMessage = 'Error voting: $e';
+      if (e.toString().contains('already voted')) {
+        errorMessage = 'You have already voted on this issue';
+        setState(() {
+          _hasVoted = true;
+        });
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error voting: $e')),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

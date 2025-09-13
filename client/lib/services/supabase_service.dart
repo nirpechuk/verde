@@ -133,11 +133,35 @@ class SupabaseService {
     return Issue.fromJson(response);
   }
 
+  static Future<bool> hasUserVotedOnIssue(String issueId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      final response = await _client
+          .from('issue_votes')
+          .select()
+          .eq('issue_id', issueId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      return response != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
   static Future<void> voteOnIssue(String issueId, int vote) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    await _client.from('issue_votes').upsert({
+    // Check if user has already voted
+    final hasVoted = await hasUserVotedOnIssue(issueId);
+    if (hasVoted) {
+      throw Exception('You have already voted on this issue');
+    }
+
+    await _client.from('issue_votes').insert({
       'issue_id': issueId,
       'user_id': user.id,
       'vote': vote,

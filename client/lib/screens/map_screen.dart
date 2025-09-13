@@ -78,8 +78,8 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _loadMapData() async {
     try {
       // Load markers in current view bounds
-      final southwest = LatLng(_currentLocation.latitude - 0.01, _currentLocation.longitude - 0.01);
-      final northeast = LatLng(_currentLocation.latitude + 0.01, _currentLocation.longitude + 0.01);
+      final southwest = LatLng(_currentLocation.latitude - 0.971, _currentLocation.longitude - 0.971);
+      final northeast = LatLng(_currentLocation.latitude + 0.971, _currentLocation.longitude + 0.971);
       
       final markers = await SupabaseService.getMarkersInBounds(southwest, northeast);
       final events = await SupabaseService.getEvents();
