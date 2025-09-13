@@ -8,6 +8,7 @@ import '../models/issue.dart';
 import '../models/marker.dart';
 import '../services/claude_service.dart';
 import '../services/supabase_service.dart';
+import '../widgets/location_picker.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   final LatLng initialLocation;
@@ -137,14 +138,12 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
   String _getCategoryDisplayName(IssueCategory category) {
     switch (category) {
-      case IssueCategory.litter:
-        return 'Litter';
-      case IssueCategory.graffiti:
-        return 'Graffiti';
-      case IssueCategory.pothole:
-        return 'Pothole';
-      case IssueCategory.brokenStreetlight:
-        return 'Broken Streetlight';
+      case IssueCategory.waste:
+        return 'Waste';
+      case IssueCategory.pollution:
+        return 'Pollution';
+      case IssueCategory.water:
+        return 'Water';
       case IssueCategory.other:
         return 'Other';
     }
@@ -172,6 +171,60 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Card(
+                child: InkWell(
+                  onTap: () async {
+                    final result = await Navigator.push<LatLng>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LocationPickerScreen(
+                          initialLocation: _selectedLocation,
+                          title: 'Select Issue Location',
+                        ),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        _selectedLocation = result;
+                      });
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Location',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.edit_location, color: Colors.green),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
+                          'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Tap to change location',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Card(
                 child: InkWell(
                   onTap: _pickImage,

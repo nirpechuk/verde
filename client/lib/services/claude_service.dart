@@ -34,7 +34,7 @@ class ClaudeService {
               {
                 'type': 'input_text',
                 'text':
-                    'Identify the issue in this photo and return JSON with title, category, and description. Category must be one of: litter, graffiti, pothole, broken_streetlight, other.'
+                    'Identify the issue in this photo and return JSON with title, category, and description. Category must be one of: waste, pollution, water, other.'
               },
               {
                 'type': 'input_image',
@@ -58,10 +58,9 @@ class ClaudeService {
                 'category': {
                   'type': 'string',
                   'enum': [
-                    'litter',
-                    'graffiti',
-                    'pothole',
-                    'broken_streetlight',
+                    'waste',
+                    'pollution',
+                    'water',
                     'other'
                   ]
                 },

@@ -1,8 +1,7 @@
 enum IssueCategory {
-  litter,
-  graffiti,
-  pothole,
-  brokenStreetlight,
+  waste,
+  pollution,
+  water,
   other,
 }
 
@@ -65,14 +64,12 @@ class Issue {
 
   static IssueCategory categoryFromString(String category) {
     switch (category) {
-      case 'litter':
-        return IssueCategory.litter;
-      case 'graffiti':
-        return IssueCategory.graffiti;
-      case 'pothole':
-        return IssueCategory.pothole;
-      case 'broken_streetlight':
-        return IssueCategory.brokenStreetlight;
+      case 'waste':
+        return IssueCategory.waste;
+      case 'pollution':
+        return IssueCategory.pollution;
+      case 'water':
+        return IssueCategory.water;
       default:
         return IssueCategory.other;
     }
@@ -80,14 +77,12 @@ class Issue {
 
   static String categoryToString(IssueCategory category) {
     switch (category) {
-      case IssueCategory.litter:
-        return 'litter';
-      case IssueCategory.graffiti:
-        return 'graffiti';
-      case IssueCategory.pothole:
-        return 'pothole';
-      case IssueCategory.brokenStreetlight:
-        return 'broken_streetlight';
+      case IssueCategory.waste:
+        return 'waste';
+      case IssueCategory.pollution:
+        return 'pollution';
+      case IssueCategory.water:
+        return 'water';
       case IssueCategory.other:
         return 'other';
     }
@@ -119,14 +114,12 @@ class Issue {
 
   String get categoryDisplayName {
     switch (category) {
-      case IssueCategory.litter:
-        return 'Litter';
-      case IssueCategory.graffiti:
-        return 'Graffiti';
-      case IssueCategory.pothole:
-        return 'Pothole';
-      case IssueCategory.brokenStreetlight:
-        return 'Broken Streetlight';
+      case IssueCategory.waste:
+        return 'Waste';
+      case IssueCategory.pollution:
+        return 'Pollution';
+      case IssueCategory.water:
+        return 'Water';
       case IssueCategory.other:
         return 'Other';
     }
