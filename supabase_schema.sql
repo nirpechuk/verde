@@ -33,7 +33,7 @@ CREATE TABLE issues (
     marker_id UUID REFERENCES markers(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
-    category TEXT NOT NULL CHECK (category IN ('trash', 'water_pollution', 'air_pollution', 'noise_pollution', 'other')),
+    category TEXT NOT NULL CHECK (category IN ('litter', 'graffiti', 'pothole', 'broken_streetlight', 'other')),
     image_url TEXT,
     credibility_score INTEGER DEFAULT 0,
     status TEXT DEFAULT 'active' CHECK (status IN ('active', 'resolved', 'removed')),
