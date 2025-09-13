@@ -217,11 +217,12 @@ class SupabaseService {
     }
 
     // Use upsert to handle both new votes and vote changes
+    // Specify onConflict to handle the unique constraint on (issue_id, user_id)
     await _client.from('issue_votes').upsert({
       'issue_id': issueId,
       'user_id': user.id,
       'vote': vote,
-    });
+    }, onConflict: 'issue_id,user_id');
 
     // Award points for voting (only if it's a new vote, not a change)
     if (currentVote == null) {
