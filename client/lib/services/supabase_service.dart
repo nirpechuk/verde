@@ -285,14 +285,12 @@ class SupabaseService {
 
   static String _issueCategoryToString(IssueCategory category) {
     switch (category) {
-      case IssueCategory.trash:
-        return 'trash';
-      case IssueCategory.waterPollution:
-        return 'water_pollution';
-      case IssueCategory.airPollution:
-        return 'air_pollution';
-      case IssueCategory.noisePollution:
-        return 'noise_pollution';
+      case IssueCategory.waste:
+        return 'waste';
+      case IssueCategory.pollution:
+        return 'pollution';
+      case IssueCategory.water:
+        return 'water';
       case IssueCategory.other:
         return 'other';
     }
