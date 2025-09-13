@@ -5,6 +5,7 @@ import '../models/issue.dart';
 import '../models/event.dart';
 import '../services/supabase_service.dart';
 import 'auth_screen.dart';
+import 'create_event_screen.dart';
 
 class MarkerDetailsScreen extends StatefulWidget {
   final AppMarker marker;
@@ -30,6 +31,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   bool _hasRsvped = false;
   String _rsvpStatus = 'not_going';
   Placemark? _placemark;
+  List<Event> _linkedEvents = [];
 
   @override
   void initState() {
@@ -43,11 +45,13 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         final issue = await SupabaseService.getIssueByMarkerId(widget.marker.id);
         final userVote = await SupabaseService.getUserVoteOnIssue(issue.id);
         final voteStats = await SupabaseService.getIssueVoteStats(issue.id);
+        final linkedEvents = await SupabaseService.getEventsForIssue(issue.id);
         setState(() {
           _issue = issue;
           _hasVoted = userVote != null;
           _userVote = userVote;
           _voteStats = voteStats;
+          _linkedEvents = linkedEvents;
         });
       } else {
         final event = await SupabaseService.getEventByMarkerId(
@@ -84,6 +88,47 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       setState(() {
         _placemark = null;
       });
+    }
+  }
+
+  Future<void> _createFixEvent() async {
+    if (_issue == null) return;
+
+    if (!SupabaseService.isAuthenticated) {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthScreen(
+            actionContext: 'to create a fix event',
+          ),
+        ),
+      );
+      if (result != true) return;
+    }
+
+    try {
+      await SupabaseService.createFixEventForIssue(
+        issueId: _issue!.id,
+        issueTitle: _issue!.title,
+        location: widget.marker.location,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Fix event created successfully! +20 points'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      widget.onDataChanged();
+      await _loadMarkerDetails(); // Refresh to get updated linked events
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating fix event: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -554,6 +599,83 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   ],
                 ),
               ],
+            ),
+          ),
+        ),
+        
+        // Linked events section
+        if (_linkedEvents.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.event, color: Colors.green),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Fix Events',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ..._linkedEvents.map((event) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_formatDateTime(event.startTime)} - ${_formatDateTime(event.endTime)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        if (event.description != null) ..[
+                          const SizedBox(height: 4),
+                          Text(
+                            event.description!,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ),
+        ],
+        
+        // Create fix event button
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _createFixEvent,
+            icon: const Icon(Icons.build),
+            label: const Text('Create Fix Event (+20 Points)'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
         ),

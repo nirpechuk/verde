@@ -263,6 +263,7 @@ class SupabaseService {
     required DateTime endTime,
     int? maxParticipants,
     String? imageUrl,
+    String? issueId,
   }) async {
     final eventData = {
       'marker_id': markerId,
@@ -273,6 +274,7 @@ class SupabaseService {
       'end_time': endTime.toIso8601String(),
       'max_participants': maxParticipants,
       'image_url': imageUrl,
+      'issue_id': issueId,
     };
 
     final response = await _client
@@ -372,6 +374,54 @@ class SupabaseService {
     } catch (e) {
       print('Error deleting image: $e');
     }
+  }
+
+  // Get events linked to a specific issue
+  static Future<List<Event>> getEventsForIssue(String issueId) async {
+    final response = await _client
+        .from('events')
+        .select()
+        .eq('issue_id', issueId)
+        .order('start_time', ascending: true);
+
+    return response.map<Event>((json) => Event.fromJson(json)).toList();
+  }
+
+  // Create a fix event for an issue
+  static Future<Event> createFixEventForIssue({
+    required String issueId,
+    required String issueTitle,
+    required LatLng location,
+    DateTime? startTime,
+    DateTime? endTime,
+    int? maxParticipants,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    // Create marker for the fix event at the same location as the issue
+    final marker = await createMarker(MarkerType.event, location);
+
+    // Default times: tomorrow at 10 AM for 2 hours
+    final defaultStart = DateTime.now().add(const Duration(days: 1)).copyWith(
+      hour: 10,
+      minute: 0,
+      second: 0,
+      microsecond: 0,
+      millisecond: 0,
+    );
+    final defaultEnd = defaultStart.add(const Duration(hours: 2));
+
+    return await createEvent(
+      markerId: marker.id,
+      title: 'Fix: $issueTitle',
+      description: 'Community event to address and fix the reported issue.',
+      category: EventCategory.cleanup,
+      startTime: startTime ?? defaultStart,
+      endTime: endTime ?? defaultEnd,
+      maxParticipants: maxParticipants,
+      issueId: issueId,
+    );
   }
 
   // Helper methods

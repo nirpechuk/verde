@@ -14,6 +14,7 @@ class Event {
   final int currentParticipants;
   final EventStatus status;
   final String? imageUrl;
+  final String? issueId; // Link to issue this event addresses
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -29,6 +30,7 @@ class Event {
     required this.currentParticipants,
     required this.status,
     this.imageUrl,
+    this.issueId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -46,6 +48,7 @@ class Event {
       currentParticipants: json['current_participants'] ?? 0,
       status: _statusFromString(json['status']),
       imageUrl: json['image_url'],
+      issueId: json['issue_id'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -64,6 +67,7 @@ class Event {
       'current_participants': currentParticipants,
       'status': _statusToString(status),
       'image_url': imageUrl,
+      'issue_id': issueId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -155,6 +159,7 @@ class Event {
     int? currentParticipants,
     EventStatus? status,
     String? imageUrl,
+    String? issueId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -170,6 +175,7 @@ class Event {
       currentParticipants: currentParticipants ?? this.currentParticipants,
       status: status ?? this.status,
       imageUrl: imageUrl ?? this.imageUrl,
+      issueId: issueId ?? this.issueId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
