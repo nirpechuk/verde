@@ -113,6 +113,7 @@ class SupabaseService {
     String? description,
     required IssueCategory category,
     String? imageUrl,
+    int credibilityScore = 0,
   }) async {
     final issueData = {
       'marker_id': markerId,
@@ -120,6 +121,7 @@ class SupabaseService {
       'description': description,
       'category': _issueCategoryToString(category),
       'image_url': imageUrl,
+      'credibility_score': credibilityScore,
     };
 
     final response = await _client

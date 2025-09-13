@@ -35,6 +35,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   bool _isSubmitting = false;
   bool _hasGenerated = false;
   bool _showEditFields = false;
+  int _credibilityScore = 0;
   late LatLng _selectedLocation;
   Placemark? _placemark;
 
@@ -100,6 +101,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         _titleController.text = result['title'] ?? '';
         _descriptionController.text = result['description'] ?? '';
         _selectedCategory = Issue.categoryFromString(result['category'] ?? '');
+        _credibilityScore = ((result['credibility_score'] ?? 0) as num).toInt();
         _hasGenerated = true;
       });
     } catch (e) {
@@ -144,6 +146,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             : _descriptionController.text.trim(),
         category: _selectedCategory,
         imageUrl: imageUrl,
+        credibilityScore: _credibilityScore,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

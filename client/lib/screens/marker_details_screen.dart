@@ -263,6 +263,14 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
+                  'Credibility: ${_issue!.credibilityScore}/10',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
                   _issue!.title,
                   style: const TextStyle(
                     fontSize: 18,
