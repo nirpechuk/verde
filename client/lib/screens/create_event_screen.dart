@@ -381,7 +381,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                 const Text('Start Date'),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${_startDate.day}/${_startDate.month}/${_startDate.year}',
+                                  '${_startDate.month.toString().padLeft(2, '0')}/${_startDate.day.toString().padLeft(2, '0')}/${_startDate.year}',
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -429,7 +429,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                 const Text('End Date'),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${_endDate.day}/${_endDate.month}/${_endDate.year}',
+                                  '${_endDate.month.toString().padLeft(2, '0')}/${_endDate.day.toString().padLeft(2, '0')}/${_endDate.year}',
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ],
