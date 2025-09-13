@@ -18,6 +18,7 @@ dependencies:
   uuid: ^4.4.2
   flutter_dotenv: ^5.1.0
   http: ^1.5.0
+  anthropic_sdk_dart: ^0.2.3
 
 dev_dependencies:
   flutter_test:
