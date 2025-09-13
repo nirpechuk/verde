@@ -45,8 +45,9 @@ Your task is to examine this image carefully and identify the main environmental
 JSON Schema:
 {
   "title": "short human-friendly title",
-  "category": "one of: waste | pollution | water | other", 
-  "description": "1-3 sentences describing the issue"
+  "category": "one of: waste | pollution | water | other",
+  "description": "1-3 sentences describing the issue",
+  "credibility_score": "integer 0-10"
 }
 
 Category Guidelines:
@@ -61,6 +62,7 @@ Important Rules:
 - The "title" should be concise and descriptive (under 10 words)
 - The "description" should be 1-2 short sentences explaining what environmental issue you observe; only express facts in the image, no interpretations or analysis
 - Focus on the PRIMARY or most prominent environmental issue if multiple issues are present
+- The "credibility_score" should reflect how convincing the image evidence is of a real environmental issue: 7-8 for significant pollution with good evidence, 0-2 for no apparent impact, adjust within 0-10 otherwise
 
 Provide your JSON response:
 ''',
@@ -102,6 +104,13 @@ Provide your JSON response:
           throw Exception('Missing required "$key" in model output');
         }
       }
+
+      // Normalize credibility score to 0-10 range
+      var credibility = 0;
+      if (payload['credibility_score'] is num) {
+        credibility = (payload['credibility_score'] as num).clamp(0, 10).toInt();
+      }
+      payload['credibility_score'] = credibility;
 
       return payload;
     } finally {
