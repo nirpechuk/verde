@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/event.dart';
 import '../models/marker.dart';
@@ -32,6 +34,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   TimeOfDay _endTime = const TimeOfDay(hour: 12, minute: 0);
   bool _isSubmitting = false;
   late LatLng _selectedLocation;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -111,6 +115,27 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _endTime.minute,
   );
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error taking photo: $e')),
+      );
+    }
+  }
+
   Future<void> _submitEvent() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -126,6 +151,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     });
 
     try {
+      // Upload image if selected
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await SupabaseService.uploadImage(_selectedImage!, 'events');
+      }
+
       // Create marker first
       final marker = await SupabaseService.createMarker(
         MarkerType.event,
@@ -145,6 +176,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         maxParticipants: _maxParticipantsController.text.trim().isEmpty
             ? null
             : int.tryParse(_maxParticipantsController.text.trim()),
+        imageUrl: imageUrl,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -233,6 +265,58 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: InkWell(
+                    onTap: _pickImage,
+                    child: Container(
+                      height: 120,
+                      padding: const EdgeInsets.all(16),
+                      child: _selectedImage != null
+                          ? Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Photo Added',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text('Tap to change photo'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.camera_alt,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 8),
+                                Text('Tap to add photo (optional)'),
+                              ],
+                            ),
                     ),
                   ),
                 ),

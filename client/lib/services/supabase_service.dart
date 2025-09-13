@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/marker.dart';
@@ -200,6 +201,7 @@ class SupabaseService {
     required DateTime startTime,
     required DateTime endTime,
     int? maxParticipants,
+    String? imageUrl,
   }) async {
     final eventData = {
       'marker_id': markerId,
@@ -209,6 +211,7 @@ class SupabaseService {
       'start_time': startTime.toIso8601String(),
       'end_time': endTime.toIso8601String(),
       'max_participants': maxParticipants,
+      'image_url': imageUrl,
     };
 
     final response = await _client
@@ -267,6 +270,46 @@ class SupabaseService {
     // Award points for RSVP (only for 'going' status and only if not previously going)
     if (status == 'going' && existingStatus != 'going') {
       await _awardPoints('rsvp_event', 5, eventId);
+    }
+  }
+
+  // Image upload methods
+  static Future<String?> uploadImage(File imageFile, String folder) async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${user.id}.jpg';
+      final filePath = '$folder/$fileName';
+
+      await _client.storage
+          .from('images')
+          .upload(filePath, imageFile);
+
+      final publicUrl = _client.storage
+          .from('images')
+          .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  static Future<void> deleteImage(String imageUrl) async {
+    try {
+      // Extract file path from URL
+      final uri = Uri.parse(imageUrl);
+      final pathSegments = uri.pathSegments;
+      if (pathSegments.length >= 3) {
+        final filePath = pathSegments.sublist(2).join('/');
+        await _client.storage
+            .from('images')
+            .remove([filePath]);
+      }
+    } catch (e) {
+      print('Error deleting image: $e');
     }
   }
 

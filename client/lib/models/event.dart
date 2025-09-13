@@ -13,6 +13,7 @@ class Event {
   final int? maxParticipants;
   final int currentParticipants;
   final EventStatus status;
+  final String? imageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -27,6 +28,7 @@ class Event {
     this.maxParticipants,
     required this.currentParticipants,
     required this.status,
+    this.imageUrl,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -43,6 +45,7 @@ class Event {
       maxParticipants: json['max_participants'],
       currentParticipants: json['current_participants'] ?? 0,
       status: _statusFromString(json['status']),
+      imageUrl: json['image_url'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -60,6 +63,7 @@ class Event {
       'max_participants': maxParticipants,
       'current_participants': currentParticipants,
       'status': _statusToString(status),
+      'image_url': imageUrl,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -150,6 +154,7 @@ class Event {
     int? maxParticipants,
     int? currentParticipants,
     EventStatus? status,
+    String? imageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -164,6 +169,7 @@ class Event {
       maxParticipants: maxParticipants ?? this.maxParticipants,
       currentParticipants: currentParticipants ?? this.currentParticipants,
       status: status ?? this.status,
+      imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -106,6 +106,12 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     });
 
     try {
+      // Upload image if selected
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await SupabaseService.uploadImage(_selectedImage!, 'issues');
+      }
+
       final marker = await SupabaseService.createMarker(
         MarkerType.issue,
         _selectedLocation,
@@ -118,7 +124,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
             ? null
             : _descriptionController.text.trim(),
         category: _selectedCategory,
-        imageUrl: null,
+        imageUrl: imageUrl,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
