@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import '../models/marker.dart';
 import '../models/issue.dart';
 import '../models/event.dart';
@@ -26,6 +27,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   bool _hasVoted = false;
   bool _hasRsvped = false;
   String _rsvpStatus = 'not_going';
+  Placemark? _placemark;
 
   @override
   void initState() {
@@ -36,14 +38,18 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   Future<void> _loadMarkerDetails() async {
     try {
       if (widget.marker.type == MarkerType.issue) {
-        final issue = await SupabaseService.getIssueByMarkerId(widget.marker.id);
+        final issue = await SupabaseService.getIssueByMarkerId(
+          widget.marker.id,
+        );
         final hasVoted = await SupabaseService.hasUserVotedOnIssue(issue.id);
         setState(() {
           _issue = issue;
           _hasVoted = hasVoted;
         });
       } else {
-        final event = await SupabaseService.getEventByMarkerId(widget.marker.id);
+        final event = await SupabaseService.getEventByMarkerId(
+          widget.marker.id,
+        );
         final rsvpStatus = await SupabaseService.getUserRsvpStatus(event.id);
         setState(() {
           _event = event;
@@ -52,12 +58,28 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading details: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading details: $e')));
     } finally {
       setState(() {
         _isLoading = false;
+      });
+    }
+
+    // Fetch placemark for location display
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        widget.marker.location.latitude,
+        widget.marker.location.longitude,
+      );
+      setState(() {
+        _placemark = placemarks.isNotEmpty ? placemarks[0] : null;
+      });
+    } catch (e) {
+      // Handle geocoding error silently or show a message if needed
+      setState(() {
+        _placemark = null;
       });
     }
   }
@@ -69,9 +91,8 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context) => const AuthScreen(
-            actionContext: 'to vote on this issue',
-          ),
+          builder: (context) =>
+              const AuthScreen(actionContext: 'to vote on this issue'),
         ),
       );
       if (result != true) return;
@@ -82,14 +103,14 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       setState(() {
         _hasVoted = true;
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vote submitted! +1 point'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       widget.onDataChanged();
       await _loadMarkerDetails(); // Refresh to get updated credibility score
     } catch (e) {
@@ -100,12 +121,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           _hasVoted = true;
         });
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
       );
     }
   }
@@ -117,9 +135,8 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context) => const AuthScreen(
-            actionContext: 'to RSVP to this event',
-          ),
+          builder: (context) =>
+              const AuthScreen(actionContext: 'to RSVP to this event'),
         ),
       );
       if (result != true) return;
@@ -131,7 +148,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         _hasRsvped = true;
         _rsvpStatus = status;
       });
-      
+
       if (status == 'going') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -147,7 +164,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           ),
         );
       }
-      
+
       widget.onDataChanged();
       await _loadMarkerDetails(); // Refresh to get updated participant count
     } catch (e) {
@@ -159,11 +176,13 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           _rsvpStatus = status;
         });
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: e.toString().contains('duplicate key') ? Colors.blue : Colors.red,
+          backgroundColor: e.toString().contains('duplicate key')
+              ? Colors.blue
+              : Colors.red,
         ),
       );
     }
@@ -184,7 +203,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -203,16 +225,22 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     Row(
                       children: [
                         Icon(
-                          _issue!.credibilityScore >= 0 ? Icons.thumb_up : Icons.thumb_down,
+                          _issue!.credibilityScore >= 0
+                              ? Icons.thumb_up
+                              : Icons.thumb_down,
                           size: 16,
-                          color: _issue!.credibilityScore >= 0 ? Colors.green : Colors.red,
+                          color: _issue!.credibilityScore >= 0
+                              ? Colors.green
+                              : Colors.red,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${_issue!.credibilityScore}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: _issue!.credibilityScore >= 0 ? Colors.green : Colors.red,
+                            color: _issue!.credibilityScore >= 0
+                                ? Colors.green
+                                : Colors.red,
                           ),
                         ),
                       ],
@@ -310,7 +338,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -328,7 +359,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     const Spacer(),
                     if (_event!.isActive)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.orange,
                           borderRadius: BorderRadius.circular(12),
@@ -361,7 +395,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   children: [
                     const Icon(Icons.schedule, size: 16),
                     const SizedBox(width: 4),
-                    Text('${_formatDateTime(_event!.startTime)} - ${_formatDateTime(_event!.endTime)}'),
+                    Text(
+                      '${_formatDateTime(_event!.startTime)} - ${_formatDateTime(_event!.endTime)}',
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -393,10 +429,20 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _rsvpToEvent('going'),
-                  icon: Icon(_rsvpStatus == 'going' ? Icons.check_circle : Icons.check_circle_outline),
-                  label: Text(_rsvpStatus == 'going' ? 'Going!' : 'Yes, I\'m going! (+5 Points)'),
+                  icon: Icon(
+                    _rsvpStatus == 'going'
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                  ),
+                  label: Text(
+                    _rsvpStatus == 'going'
+                        ? 'Going!'
+                        : 'Yes, I\'m going! (+5 Points)',
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _rsvpStatus == 'going' ? Colors.green.shade700 : Colors.green,
+                    backgroundColor: _rsvpStatus == 'going'
+                        ? Colors.green.shade700
+                        : Colors.green,
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -406,10 +452,14 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _rsvpToEvent('maybe'),
-                  icon: Icon(_rsvpStatus == 'maybe' ? Icons.help : Icons.help_outline),
+                  icon: Icon(
+                    _rsvpStatus == 'maybe' ? Icons.help : Icons.help_outline,
+                  ),
                   label: Text(_rsvpStatus == 'maybe' ? 'Maybe going' : 'Maybe'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _rsvpStatus == 'maybe' ? Colors.orange.shade700 : Colors.orange,
+                    backgroundColor: _rsvpStatus == 'maybe'
+                        ? Colors.orange.shade700
+                        : Colors.orange,
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -420,10 +470,18 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () => _rsvpToEvent('not_going'),
-                    icon: Icon(_rsvpStatus == 'not_going' ? Icons.cancel : Icons.cancel_outlined),
-                    label: Text(_rsvpStatus == 'not_going' ? 'Not going' : 'Cancel RSVP'),
+                    icon: Icon(
+                      _rsvpStatus == 'not_going'
+                          ? Icons.cancel
+                          : Icons.cancel_outlined,
+                    ),
+                    label: Text(
+                      _rsvpStatus == 'not_going' ? 'Not going' : 'Cancel RSVP',
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _rsvpStatus == 'not_going' ? Colors.grey.shade700 : Colors.grey,
+                      backgroundColor: _rsvpStatus == 'not_going'
+                          ? Colors.grey.shade700
+                          : Colors.grey,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -459,7 +517,13 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.blue),
                 const SizedBox(width: 8),
-                Text('You\'re ${_rsvpStatus == 'going' ? 'going' : _rsvpStatus == 'maybe' ? 'maybe going' : 'not going'}'),
+                Text(
+                  'You\'re ${_rsvpStatus == 'going'
+                      ? 'going'
+                      : _rsvpStatus == 'maybe'
+                      ? 'maybe going'
+                      : 'not going'}',
+                ),
               ],
             ),
           ),
@@ -476,12 +540,50 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
     return '${date.day}/${date.month} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
+  String _formatAddress(Placemark placemark) {
+    final parts = <String>[];
+
+    // Add street address
+    if (placemark.street != null && placemark.street!.isNotEmpty) {
+      parts.add(placemark.street!);
+    }
+
+    // Add locality (city)
+    if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+      parts.add(placemark.locality!);
+    }
+
+    // Add administrative area (state/province)
+    if (placemark.administrativeArea != null &&
+        placemark.administrativeArea!.isNotEmpty) {
+      parts.add(placemark.administrativeArea!);
+    }
+
+    // Add postal code
+    if (placemark.postalCode != null && placemark.postalCode!.isNotEmpty) {
+      parts.add(placemark.postalCode!);
+    }
+
+    // Add country
+    if (placemark.country != null && placemark.country!.isNotEmpty) {
+      parts.add(placemark.country!);
+    }
+
+    return parts.isNotEmpty ? parts.join(', ') : 'Unknown location';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.marker.type == MarkerType.issue ? 'Issue Details' : 'Event Details'),
-        backgroundColor: widget.marker.type == MarkerType.issue ? Colors.red : Colors.green,
+        title: Text(
+          widget.marker.type == MarkerType.issue
+              ? 'Issue Details'
+              : 'Event Details',
+        ),
+        backgroundColor: widget.marker.type == MarkerType.issue
+            ? Colors.red
+            : Colors.green,
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -504,8 +606,11 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Lat: ${widget.marker.location.latitude.toStringAsFixed(6)}\n'
-                              'Lng: ${widget.marker.location.longitude.toStringAsFixed(6)}',
+                              // 'Lat: ${widget.marker.location.latitude.toStringAsFixed(6)}\n'
+                              // 'Lng: ${widget.marker.location.longitude.toStringAsFixed(6)}',
+                              _placemark != null
+                                  ? _formatAddress(_placemark!)
+                                  : 'Loading location...',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
