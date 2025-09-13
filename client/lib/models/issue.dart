@@ -1,4 +1,9 @@
-enum IssueCategory { trash, waterPollution, airPollution, noisePollution, other }
+enum IssueCategory {
+  waste,
+  pollution,
+  water,
+  other,
+}
 
 enum IssueStatus { active, resolved, removed }
 
@@ -33,7 +38,7 @@ class Issue {
       markerId: json['marker_id'],
       title: json['title'],
       description: json['description'],
-      category: _categoryFromString(json['category']),
+      category: categoryFromString(json['category']),
       imageUrl: json['image_url'],
       credibilityScore: json['credibility_score'] ?? 0,
       status: _statusFromString(json['status']),
@@ -48,7 +53,7 @@ class Issue {
       'marker_id': markerId,
       'title': title,
       'description': description,
-      'category': _categoryToString(category),
+      'category': categoryToString(category),
       'image_url': imageUrl,
       'credibility_score': credibilityScore,
       'status': _statusToString(status),
@@ -57,31 +62,27 @@ class Issue {
     };
   }
 
-  static IssueCategory _categoryFromString(String category) {
+  static IssueCategory categoryFromString(String category) {
     switch (category) {
-      case 'trash':
-        return IssueCategory.trash;
-      case 'water_pollution':
-        return IssueCategory.waterPollution;
-      case 'air_pollution':
-        return IssueCategory.airPollution;
-      case 'noise_pollution':
-        return IssueCategory.noisePollution;
+      case 'waste':
+        return IssueCategory.waste;
+      case 'pollution':
+        return IssueCategory.pollution;
+      case 'water':
+        return IssueCategory.water;
       default:
         return IssueCategory.other;
     }
   }
 
-  static String _categoryToString(IssueCategory category) {
+  static String categoryToString(IssueCategory category) {
     switch (category) {
-      case IssueCategory.trash:
-        return 'trash';
-      case IssueCategory.waterPollution:
-        return 'water_pollution';
-      case IssueCategory.airPollution:
-        return 'air_pollution';
-      case IssueCategory.noisePollution:
-        return 'noise_pollution';
+      case IssueCategory.waste:
+        return 'waste';
+      case IssueCategory.pollution:
+        return 'pollution';
+      case IssueCategory.water:
+        return 'water';
       case IssueCategory.other:
         return 'other';
     }
@@ -113,14 +114,12 @@ class Issue {
 
   String get categoryDisplayName {
     switch (category) {
-      case IssueCategory.trash:
-        return 'Trash';
-      case IssueCategory.waterPollution:
-        return 'Water Pollution';
-      case IssueCategory.airPollution:
-        return 'Air Pollution';
-      case IssueCategory.noisePollution:
-        return 'Noise Pollution';
+      case IssueCategory.waste:
+        return 'Waste';
+      case IssueCategory.pollution:
+        return 'Pollution';
+      case IssueCategory.water:
+        return 'Water';
       case IssueCategory.other:
         return 'Other';
     }

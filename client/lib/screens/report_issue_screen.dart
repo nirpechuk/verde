@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
+
 import '../models/issue.dart';
 import '../models/marker.dart';
+import '../services/claude_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/location_picker.dart';
 
@@ -25,10 +28,12 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
-  IssueCategory _selectedCategory = IssueCategory.trash;
+
+  IssueCategory _selectedCategory = IssueCategory.other;
   File? _selectedImage;
   bool _isSubmitting = false;
+  bool _hasGenerated = false;
+  bool _showEditFields = false;
   late LatLng _selectedLocation;
 
   final ImagePicker _picker = ImagePicker();
@@ -47,16 +52,49 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         maxHeight: 1024,
         imageQuality: 80,
       );
-      
+
       if (image != null) {
         setState(() {
           _selectedImage = File(image.path);
         });
+        await _analyzeImage();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error taking photo: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error taking photo: $e')));
+    }
+  }
+
+  Future<void> _analyzeImage() async {
+    if (_selectedImage == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final result = await ClaudeService.analyzeIssue(_selectedImage!);
+      setState(() {
+        _titleController.text = result['title'] ?? '';
+        _descriptionController.text = result['description'] ?? '';
+        _selectedCategory = Issue.categoryFromString(result['category'] ?? '');
+        _hasGenerated = true;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error analyzing photo: $e')));
+
+      setState(() {
+        // Allow manual entry if AI analysis fails
+        _hasGenerated = true;
+        _showEditFields = true;
+      });
+    } finally {
+      Navigator.of(context).pop();
     }
   }
 
@@ -68,21 +106,19 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     });
 
     try {
-      // Create marker first
       final marker = await SupabaseService.createMarker(
         MarkerType.issue,
         _selectedLocation,
       );
 
-      // Create issue
       await SupabaseService.createIssue(
         markerId: marker.id,
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         category: _selectedCategory,
-        imageUrl: null, // TODO: Implement image upload to Supabase Storage
+        imageUrl: null,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,14 +131,34 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       widget.onIssueReported();
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error reporting issue: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error reporting issue: $e')));
     } finally {
       setState(() {
         _isSubmitting = false;
       });
     }
+  }
+
+  String _getCategoryDisplayName(IssueCategory category) {
+    switch (category) {
+      case IssueCategory.waste:
+        return 'Waste';
+      case IssueCategory.pollution:
+        return 'Pollution';
+      case IssueCategory.water:
+        return 'Water';
+      case IssueCategory.other:
+        return 'Other';
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   @override
@@ -150,7 +206,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const Spacer(),
-                            const Icon(Icons.edit_location, color: Colors.green),
+                            const Icon(
+                              Icons.edit_location,
+                              color: Colors.green,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -172,52 +231,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Issue Title *',
-                  border: OutlineInputBorder(),
-                  hintText: 'e.g., Trash pile near park entrance',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<IssueCategory>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Category *',
-                  border: OutlineInputBorder(),
-                ),
-                items: IssueCategory.values.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(_getCategoryDisplayName(category)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedCategory = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (Optional)',
-                  border: OutlineInputBorder(),
-                  hintText: 'Additional details about the issue...',
-                ),
-                maxLines: 3,
               ),
               const SizedBox(height: 16),
               Card(
@@ -246,7 +259,9 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                                   children: [
                                     Text(
                                       'Photo Added',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     Text('Tap to change photo'),
                                   ],
@@ -257,17 +272,91 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                         : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.camera_alt, size: 40, color: Colors.grey),
+                              Icon(
+                                Icons.camera_alt,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 8),
-                              Text('Tap to add photo (Optional)'),
+                              Text('Tap to add photo'),
                             ],
                           ),
                   ),
                 ),
               ),
+              if (_hasGenerated && !_showEditFields) ...[
+                const SizedBox(height: 16),
+                Text(
+                  _titleController.text,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(_descriptionController.text),
+                const SizedBox(height: 8),
+                Text('Category: ${_getCategoryDisplayName(_selectedCategory)}'),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _showEditFields = true;
+                      });
+                    },
+                    child: const Text('Edit'),
+                  ),
+                ),
+              ],
+              if (_showEditFields) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Issue Title *',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<IssueCategory>(
+                  value: _selectedCategory,
+                  decoration: const InputDecoration(
+                    labelText: 'Category *',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: IssueCategory.values.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(_getCategoryDisplayName(category)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedCategory = value;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitIssue,
+                onPressed: (_isSubmitting || !_hasGenerated)
+                    ? null
+                    : _submitIssue,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -277,7 +366,10 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                         'Report Issue (+10 Points)',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ],
@@ -285,27 +377,5 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         ),
       ),
     );
-  }
-
-  String _getCategoryDisplayName(IssueCategory category) {
-    switch (category) {
-      case IssueCategory.trash:
-        return 'Trash';
-      case IssueCategory.waterPollution:
-        return 'Water Pollution';
-      case IssueCategory.airPollution:
-        return 'Air Pollution';
-      case IssueCategory.noisePollution:
-        return 'Noise Pollution';
-      case IssueCategory.other:
-        return 'Other';
-    }
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 }

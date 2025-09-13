@@ -38,10 +38,9 @@ class AppMarker(BaseModel):
 
 
 class IssueCategory(str, Enum):
-    trash = "trash"
-    water_pollution = "water_pollution"
-    air_pollution = "air_pollution"
-    noise_pollution = "noise_pollution"
+    waste = "waste"
+    pollution = "pollution"
+    water = "water"
     other = "other"
 
 
