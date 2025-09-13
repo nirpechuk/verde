@@ -61,12 +61,16 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             options: MapOptions(
               initialCenter: widget.initialLocation,
               initialZoom: 15.0,
+              minZoom: 5.0,
+              maxZoom: 90.0,
               onTap: _onMapTap,
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
                 userAgentPackageName: 'com.example.ecoaction',
+                retinaMode: RetinaMode.isHighDensity(context),
               ),
               MarkerLayer(
                 markers: [
