@@ -25,6 +25,8 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   Event? _event;
   bool _isLoading = true;
   bool _hasVoted = false;
+  int? _userVote; // -1, 1, or null
+  Map<String, int> _voteStats = {'upvotes': 0, 'downvotes': 0, 'total': 0, 'score': 0};
   bool _hasRsvped = false;
   String _rsvpStatus = 'not_going';
   Placemark? _placemark;
@@ -38,13 +40,14 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   Future<void> _loadMarkerDetails() async {
     try {
       if (widget.marker.type == MarkerType.issue) {
-        final issue = await SupabaseService.getIssueByMarkerId(
-          widget.marker.id,
-        );
-        final hasVoted = await SupabaseService.hasUserVotedOnIssue(issue.id);
+        final issue = await SupabaseService.getIssueByMarkerId(widget.marker.id);
+        final userVote = await SupabaseService.getUserVoteOnIssue(issue.id);
+        final voteStats = await SupabaseService.getIssueVoteStats(issue.id);
         setState(() {
           _issue = issue;
-          _hasVoted = hasVoted;
+          _hasVoted = userVote != null;
+          _userVote = userVote;
+          _voteStats = voteStats;
         });
       } else {
         final event = await SupabaseService.getEventByMarkerId(
@@ -100,26 +103,26 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
     try {
       await SupabaseService.voteOnIssue(_issue!.id, vote);
-      setState(() {
-        _hasVoted = true;
-      });
-
+      // Show appropriate message based on whether it's a new vote or vote change
+      String message;
+      if (_userVote == null) {
+        message = 'Vote submitted! +1 point';
+      } else {
+        message = 'Vote updated!';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vote submitted! +1 point'),
+        SnackBar(
+          content: Text(message),
           backgroundColor: Colors.green,
         ),
       );
 
       widget.onDataChanged();
-      await _loadMarkerDetails(); // Refresh to get updated credibility score
+      await _loadMarkerDetails(); // Refresh to get updated voting information
     } catch (e) {
       String errorMessage = 'Error voting: $e';
-      if (e.toString().contains('already voted')) {
-        errorMessage = 'You have already voted on this issue';
-        setState(() {
-          _hasVoted = true;
-        });
+      if (e.toString().contains('already cast this vote')) {
+        errorMessage = 'You have already cast this vote on this issue';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -222,27 +225,38 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Row(
+                    // Enhanced credibility display with vote breakdown
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Icon(
-                          _issue!.credibilityScore >= 0
-                              ? Icons.thumb_up
-                              : Icons.thumb_down,
-                          size: 16,
-                          color: _issue!.credibilityScore >= 0
-                              ? Colors.green
-                              : Colors.red,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _voteStats['score']! >= 0 ? Icons.thumb_up : Icons.thumb_down,
+                              size: 16,
+                              color: _voteStats['score']! >= 0 ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_voteStats['score']}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _voteStats['score']! >= 0 ? Colors.green : Colors.red,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_issue!.credibilityScore}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: _issue!.credibilityScore >= 0
-                                ? Colors.green
-                                : Colors.red,
+                        if (_voteStats['total']! > 0) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '${_voteStats['total']} vote${_voteStats['total'] == 1 ? '' : 's'}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],
@@ -269,56 +283,204 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        if (!_hasVoted) ...[
-          const Text(
-            'Is this issue credible?',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _voteOnIssue(1),
-                  icon: const Icon(Icons.thumb_up),
-                  label: const Text('Yes (+1 Point)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
+        
+        // Voting statistics card
+        if (_voteStats['total']! > 0)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Community Voting',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _voteOnIssue(-1),
-                  icon: const Icon(Icons.thumb_down),
-                  label: const Text('No (+1 Point)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.thumb_up, color: Colors.green, size: 20),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${_voteStats['upvotes']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Text(
+                                'Credible',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.withOpacity(0.3)),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.thumb_down, color: Colors.red, size: 20),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${_voteStats['downvotes']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Text(
+                                'Not Credible',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ] else ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue),
             ),
-            child: const Row(
+          ),
+        
+        const SizedBox(height: 16),
+        
+        // Voting action section
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.check_circle, color: Colors.blue),
-                SizedBox(width: 8),
-                Text('Thank you for voting!'),
+                Text(
+                  _hasVoted 
+                    ? 'Your Vote' 
+                    : 'Is this issue credible?',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                
+                if (_hasVoted) ...[
+                  // Show current vote and allow changing
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (_userVote == 1 ? Colors.green : Colors.red).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: (_userVote == 1 ? Colors.green : Colors.red).withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _userVote == 1 ? Icons.thumb_up : Icons.thumb_down,
+                          color: _userVote == 1 ? Colors.green : Colors.red,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'You voted: ${_userVote == 1 ? 'Credible' : 'Not Credible'}',
+                          style: TextStyle(
+                            color: _userVote == 1 ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Change your vote:',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                
+                // Voting buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _userVote == 1 ? null : () => _voteOnIssue(1),
+                        icon: const Icon(Icons.thumb_up),
+                        label: Text(_hasVoted 
+                          ? (_userVote == 1 ? 'Current Vote' : 'Change to Credible')
+                          : 'Yes (+1 Point)'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _userVote == 1 
+                            ? Colors.green.shade700 
+                            : Colors.green,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.green.shade700,
+                          disabledForegroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _userVote == -1 ? null : () => _voteOnIssue(-1),
+                        icon: const Icon(Icons.thumb_down),
+                        label: Text(_hasVoted 
+                          ? (_userVote == -1 ? 'Current Vote' : 'Change to Not Credible')
+                          : 'No (+1 Point)'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _userVote == -1 
+                            ? Colors.red.shade700 
+                            : Colors.red,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.red.shade700,
+                          disabledForegroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-        ],
+        ),
       ],
     );
   }
