@@ -25,6 +25,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Event> _events = [];
   bool _isLoading = true;
   int _userPoints = 0;
+  bool _isDarkMode = false;
 
   @override
   void initState() {
@@ -234,6 +235,12 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  void _toggleMapTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
+  }
+
   Future<void> _onReportIssue() async {
     if (!SupabaseService.isAuthenticated) {
       final result = await Navigator.push<bool>(
@@ -376,8 +383,8 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: _currentLocation,
                 initialZoom: 15.0,
-                minZoom: 10.0,
-                maxZoom: 18.0,
+                minZoom: 5.0,
+                maxZoom: 90.0,
                 onMapEvent: (event) {
                   if (event is MapEventMoveEnd) {
                     // Optionally reload markers when map moves
@@ -387,8 +394,12 @@ class _MapScreenState extends State<MapScreen> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: _isDarkMode 
+                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
                   userAgentPackageName: 'com.example.ecoaction',
+                  retinaMode: RetinaMode.isHighDensity(context),
                 ),
                 MarkerLayer(
                   markers: _buildFlutterMapMarkers(),
@@ -398,6 +409,16 @@ class _MapScreenState extends State<MapScreen> {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: "theme_toggle",
+            onPressed: _toggleMapTheme,
+            backgroundColor: _isDarkMode ? Colors.yellow[700] : Colors.grey[800],
+            child: Icon(
+              _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
           FloatingActionButton(
             heroTag: "report_issue",
             onPressed: _onReportIssue,
