@@ -7,16 +7,19 @@ import '../models/event.dart';
 import '../models/marker.dart';
 import '../services/supabase_service.dart';
 import '../widgets/location_picker.dart';
+import '../widgets/mini_map.dart';
 import '../helpers/utils.dart';
 
 class CreateEventScreen extends StatefulWidget {
-  final LatLng initialLocation;
+  final LatLng? initialLocation;
   final VoidCallback onEventCreated;
+  final bool isDarkMode;
 
   const CreateEventScreen({
     super.key,
-    required this.initialLocation,
+    this.initialLocation,
     required this.onEventCreated,
+    required this.isDarkMode,
   });
 
   @override
@@ -43,7 +46,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedLocation = widget.initialLocation;
+    _selectedLocation = widget.initialLocation ?? const LatLng(42.3601, -71.0589);
     _fetchPlacemark();
   }
 
@@ -234,7 +237,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = widget.isDarkMode;
 
     return Scaffold(
       backgroundColor: isDarkMode ? darkModeDark : Colors.grey[50],
@@ -293,7 +296,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                   const SizedBox(height: 24),
                   Card(
+                    elevation: 0,
+                    color: isDarkMode
+                        ? darkModeMedium.withValues(alpha: 0.3)
+                        : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      side: BorderSide(
+                        color: isDarkMode
+                            ? darkModeMedium
+                            : lightModeMedium.withValues(alpha: 0.3),
+                      ),
+                    ),
                     child: InkWell(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
                       onTap: _pickImage,
                       child: Container(
                         height: 120,
@@ -311,7 +327,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 16),
-                                  const Expanded(
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -322,40 +338,54 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                           'Photo Added',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
+                                            color: isDarkMode ? Colors.white : Colors.black87,
                                           ),
                                         ),
-                                        Text('Tap to change photo'),
+                                        Text(
+                                          'Tap to change photo',
+                                          style: TextStyle(
+                                            color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.grey[600],
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ],
                               )
-                            : const Column(
+                            : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     Icons.camera_alt,
                                     size: 40,
-                                    color: Colors.grey,
+                                    color: isDarkMode ? Colors.white.withOpacity(0.6) : Colors.grey,
                                   ),
-                                  SizedBox(height: 8),
-                                  Text('Tap to add photo (optional)'),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tap to add photo (optional)',
+                                    style: TextStyle(
+                                      color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                                    ),
+                                  ),
                                 ],
                               ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   TextFormField(
                     controller: _titleController,
                     decoration: InputDecoration(
                       labelText: 'Event Title *',
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -363,7 +393,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -393,12 +423,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     value: _selectedCategory,
                     decoration: InputDecoration(
                       labelText: 'Category *',
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -406,7 +439,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -426,7 +459,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     items: EventCategory.values.map((category) {
                       return DropdownMenuItem(
                         value: category,
-                        child: Text(_getCategoryDisplayName(category)),
+                        child: Text(
+                          _getCategoryDisplayName(category),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                          ),
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -442,12 +480,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       labelText: 'Description (Optional)',
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -455,7 +496,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -480,19 +521,48 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     children: [
                       Expanded(
                         child: Card(
+                          elevation: 0,
+                          color: isDarkMode
+                              ? darkModeMedium.withValues(alpha: 0.3)
+                              : Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            side: BorderSide(
+                              color: isDarkMode
+                                  ? darkModeMedium
+                                  : lightModeMedium.withValues(alpha: 0.3),
+                            ),
+                          ),
                           child: InkWell(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
                             onTap: _selectStartDate,
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Start Date'),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 16,
+                                        color: isDarkMode ? highlight : lightModeDark,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Start Date',
+                                        style: TextStyle(
+                                          color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${_startDate.month.toString().padLeft(2, '0')}/${_startDate.day.toString().padLeft(2, '0')}/${_startDate.year}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      color: isDarkMode ? Colors.white : Colors.black87,
                                     ),
                                   ),
                                 ],
@@ -504,19 +574,48 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Card(
+                          elevation: 0,
+                          color: isDarkMode
+                              ? darkModeMedium.withValues(alpha: 0.3)
+                              : Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            side: BorderSide(
+                              color: isDarkMode
+                                  ? darkModeMedium
+                                  : lightModeMedium.withValues(alpha: 0.3),
+                            ),
+                          ),
                           child: InkWell(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
                             onTap: _selectStartTime,
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Start Time'),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 16,
+                                        color: isDarkMode ? highlight : lightModeDark,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Start Time',
+                                        style: TextStyle(
+                                          color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     _startTime.format(context),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      color: isDarkMode ? Colors.white : Colors.black87,
                                     ),
                                   ),
                                 ],
@@ -532,19 +631,48 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     children: [
                       Expanded(
                         child: Card(
+                          elevation: 0,
+                          color: isDarkMode
+                              ? darkModeMedium.withValues(alpha: 0.3)
+                              : Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            side: BorderSide(
+                              color: isDarkMode
+                                  ? darkModeMedium
+                                  : lightModeMedium.withValues(alpha: 0.3),
+                            ),
+                          ),
                           child: InkWell(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
                             onTap: _selectEndDate,
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('End Date'),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 16,
+                                        color: isDarkMode ? highlight : lightModeDark,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'End Date',
+                                        style: TextStyle(
+                                          color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${_endDate.month.toString().padLeft(2, '0')}/${_endDate.day.toString().padLeft(2, '0')}/${_endDate.year}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      color: isDarkMode ? Colors.white : Colors.black87,
                                     ),
                                   ),
                                 ],
@@ -556,19 +684,48 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Card(
+                          elevation: 0,
+                          color: isDarkMode
+                              ? darkModeMedium.withValues(alpha: 0.3)
+                              : Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            side: BorderSide(
+                              color: isDarkMode
+                                  ? darkModeMedium
+                                  : lightModeMedium.withValues(alpha: 0.3),
+                            ),
+                          ),
                           child: InkWell(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
                             onTap: _selectEndTime,
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('End Time'),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 16,
+                                        color: isDarkMode ? highlight : lightModeDark,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'End Time',
+                                        style: TextStyle(
+                                          color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     _endTime.format(context),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      color: isDarkMode ? Colors.white : Colors.black87,
                                     ),
                                   ),
                                 ],
@@ -584,12 +741,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     controller: _maxParticipantsController,
                     decoration: InputDecoration(
                       labelText: 'Max Participants (Optional)',
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
@@ -597,7 +757,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           kFloatingButtonBorderRadius,
                         ),
                         borderSide: BorderSide(
-                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -626,64 +786,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
-                  Container(
-                    width: double.infinity,
-                    height: kFloatingButtonSize,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: _isSubmitting
-                            ? [
-                                (isDarkMode ? darkModeMedium : lightModeMedium)
-                                    .withValues(alpha: 0.5),
-                                (isDarkMode ? darkModeMedium : lightModeMedium)
-                                    .withValues(alpha: 0.5),
-                              ]
-                            : [
-                                isDarkMode ? lightModeMedium : lightModeMedium,
-                                isDarkMode ? lightModeDark : lightModeDark,
-                              ],
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        kFloatingButtonBorderRadius,
-                      ),
-                      boxShadow: _isSubmitting ? [] : kFloatingButtonShadow,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(
-                        kFloatingButtonBorderRadius,
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(
-                          kFloatingButtonBorderRadius,
-                        ),
-                        onTap: _isSubmitting ? null : _submitEvent,
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: _isSubmitting
-                              ? CircularProgressIndicator(
-                                  color: isDarkMode ? highlight : Colors.white,
-                                  strokeWidth: 2,
-                                )
-                              : Text(
-                                  'Create Event (+20 Points)',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDarkMode
-                                        ? highlight
-                                        : Colors.white,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Move location section to bottom
+                  const SizedBox(height: 8),
                   Card(
                     elevation: 0,
                     color: isDarkMode
@@ -753,30 +856,104 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _placemark != null
-                                  ? _formatAddress(_placemark!)
-                                  : 'Loading address...',
-                              style: TextStyle(
-                                color: isDarkMode
-                                    ? darkModeMedium
-                                    : Colors.grey[600],
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Tap to change location',
-                              style: TextStyle(
-                                color: isDarkMode
-                                    ? lightModeMedium
-                                    : lightModeDark,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _placemark != null
+                                            ? _formatAddress(_placemark!)
+                                            : 'Loading address...',
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.white.withOpacity(0.8)
+                                              : Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Tap to change location',
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? lightModeMedium
+                                              : lightModeDark,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                MiniMap(
+                                  location: _selectedLocation,
+                                  height: 80,
+                                  width: 80,
+                                  borderRadius: 8,
+                                ),
+                              ],
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    height: kFloatingButtonSize,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: _isSubmitting
+                            ? [
+                                (isDarkMode ? darkModeMedium : lightModeMedium)
+                                    .withValues(alpha: 0.5),
+                                (isDarkMode ? darkModeMedium : lightModeMedium)
+                                    .withValues(alpha: 0.5),
+                              ]
+                            : [
+                                isDarkMode ? lightModeMedium : lightModeMedium,
+                                isDarkMode ? lightModeDark : lightModeDark,
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
+                      boxShadow: _isSubmitting ? [] : kFloatingButtonShadow,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        onTap: _isSubmitting ? null : _submitEvent,
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: _isSubmitting
+                              ? CircularProgressIndicator(
+                                  color: isDarkMode ? highlight : Colors.white,
+                                  strokeWidth: 2,
+                                )
+                              : Text(
+                                  'Create Event (+20 Points)',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDarkMode
+                                        ? highlight
+                                        : Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                     ),

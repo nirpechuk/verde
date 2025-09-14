@@ -472,8 +472,8 @@ class _MapScreenState extends State<MapScreen> {
           initialLocation: _currentLocation,
           onIssueReported: () {
             _loadMapData();
-            _loadUserData();
           },
+          isDarkMode: _isDarkMode,
         ),
       ),
     );
@@ -500,8 +500,8 @@ class _MapScreenState extends State<MapScreen> {
           initialLocation: _currentLocation,
           onEventCreated: () {
             _loadMapData();
-            _loadUserData();
           },
+          isDarkMode: _isDarkMode,
         ),
       ),
     );

@@ -1096,7 +1096,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     Text(
                       _linkedIssue!.description!,
                       style: TextStyle(
-                        color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                        color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.grey[700],
                       ),
                     ),
                   ],
@@ -1133,7 +1133,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                         'Credibility: ${_linkedIssue!.credibilityScore}/10',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                          color: isDarkMode ? Colors.white.withValues(alpha: 0.8) : Colors.grey[700],
                         ),
                       ),
                     ],

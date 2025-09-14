@@ -10,16 +10,19 @@ import '../models/marker.dart';
 import '../services/claude_service.dart';
 import '../services/supabase_service.dart';
 import '../widgets/location_picker.dart';
+import '../widgets/mini_map.dart';
 import '../helpers/utils.dart';
 
 class ReportIssueScreen extends StatefulWidget {
-  final LatLng initialLocation;
+  final LatLng? initialLocation;
   final VoidCallback onIssueReported;
+  final bool isDarkMode;
 
   const ReportIssueScreen({
     super.key,
-    required this.initialLocation,
+    this.initialLocation,
     required this.onIssueReported,
+    required this.isDarkMode,
   });
 
   @override
@@ -45,7 +48,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedLocation = widget.initialLocation;
+    _selectedLocation = widget.initialLocation ?? const LatLng(42.3601, -71.0589);
     _fetchPlacemark();
   }
 
@@ -236,7 +239,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = widget.isDarkMode;
 
     return Scaffold(
       backgroundColor: isDarkMode ? darkModeDark : Colors.grey[50],
@@ -294,7 +297,20 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                 ),
                 const SizedBox(height: 24),
                 Card(
+                  elevation: 0,
+                  color: isDarkMode
+                      ? darkModeMedium.withValues(alpha: 0.3)
+                      : Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                    side: BorderSide(
+                      color: isDarkMode
+                          ? darkModeMedium
+                          : lightModeMedium.withValues(alpha: 0.3),
+                    ),
+                  ),
                   child: InkWell(
+                    borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
                     onTap: _pickImage,
                     child: Container(
                       height: 120,
@@ -312,7 +328,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 16),
-                                const Expanded(
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -322,24 +338,35 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                                         'Photo Added',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
+                                          color: isDarkMode ? Colors.white : Colors.black87,
                                         ),
                                       ),
-                                      Text('Tap to change photo'),
+                                      Text(
+                                        'Tap to change photo',
+                                        style: TextStyle(
+                                          color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.grey[600],
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                               ],
                             )
-                          : const Column(
+                          : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.camera_alt,
                                   size: 40,
-                                  color: Colors.grey,
+                                  color: isDarkMode ? Colors.white.withOpacity(0.6) : Colors.grey,
                                 ),
-                                SizedBox(height: 8),
-                                Text('Tap to add photo'),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tap to add photo',
+                                  style: TextStyle(
+                                    color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                                  ),
+                                ),
                               ],
                             ),
                     ),
@@ -499,67 +526,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                     maxLines: 3,
                   ),
                 ],
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  height: kFloatingButtonSize,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: (_isSubmitting || !_hasGenerated)
-                          ? [
-                              (isDarkMode ? darkModeMedium : lightModeDark)
-                                  .withValues(alpha: 0.5),
-                              (isDarkMode ? darkModeMedium : lightModeDark)
-                                  .withValues(alpha: 0.5),
-                            ]
-                          : [
-                              isDarkMode ? darkModeMedium : lightModeDark,
-                              isDarkMode
-                                  ? darkModeDark
-                                  : lightModeDark.withValues(alpha: 0.8),
-                            ],
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      kFloatingButtonBorderRadius,
-                    ),
-                    boxShadow: (_isSubmitting || !_hasGenerated)
-                        ? []
-                        : kFloatingButtonShadow,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(
-                      kFloatingButtonBorderRadius,
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(
-                        kFloatingButtonBorderRadius,
-                      ),
-                      onTap: (_isSubmitting || !_hasGenerated)
-                          ? null
-                          : _submitIssue,
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: _isSubmitting
-                            ? CircularProgressIndicator(
-                                color: isDarkMode ? highlight : Colors.white,
-                                strokeWidth: 2,
-                              )
-                            : Text(
-                                'Report Issue (+10 Points)',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDarkMode ? highlight : Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 // Move location section to bottom
                 Card(
                   elevation: 0,
@@ -628,34 +594,112 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _placemark != null
-                                ? _formatAddress(_placemark!)
-                                : 'Loading location...',
-                            style: TextStyle(
-                              color: isDarkMode
-                                  ? darkModeMedium
-                                  : Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Tap to change location',
-                            style: TextStyle(
-                              color: isDarkMode
-                                  ? lightModeMedium
-                                  : lightModeDark,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _placemark != null
+                                          ? _formatAddress(_placemark!)
+                                          : 'Loading location...',
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                              ? Colors.white.withOpacity(0.8)
+                                              : Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Tap to change location',
+                                      style: TextStyle(
+                                        color: isDarkMode
+                                            ? lightModeMedium
+                                            : lightModeDark,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              MiniMap(
+                                location: _selectedLocation,
+                                height: 80,
+                                width: 80,
+                                borderRadius: 8,
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: kFloatingButtonSize,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: (_isSubmitting || !_hasGenerated)
+                          ? [
+                              (isDarkMode ? darkModeMedium : lightModeDark)
+                                  .withValues(alpha: 0.5),
+                              (isDarkMode ? darkModeMedium : lightModeDark)
+                                  .withValues(alpha: 0.5),
+                            ]
+                          : [
+                              isDarkMode ? darkModeMedium : lightModeDark,
+                              isDarkMode
+                                  ? darkModeDark
+                                  : lightModeDark.withValues(alpha: 0.8),
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(
+                      kFloatingButtonBorderRadius,
+                    ),
+                    boxShadow: (_isSubmitting || !_hasGenerated)
+                        ? []
+                        : kFloatingButtonShadow,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(
+                      kFloatingButtonBorderRadius,
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
+                      onTap: (_isSubmitting || !_hasGenerated)
+                          ? null
+                          : _submitIssue,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: _isSubmitting
+                            ? CircularProgressIndicator(
+                                color: isDarkMode ? highlight : Colors.white,
+                                strokeWidth: 2,
+                              )
+                            : Text(
+                                'Report Issue (+10 Points)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode ? highlight : Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ), 
               ],
             ),
           ),
