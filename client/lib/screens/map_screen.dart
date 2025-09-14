@@ -611,7 +611,6 @@ class _MapScreenState extends State<MapScreen> {
       // Too far out - minimal white glow
       return {
         'color': Colors.white,
-        'alpha': 0.1,
         'description': 'far_future'
       };
     }
