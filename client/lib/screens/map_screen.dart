@@ -110,9 +110,20 @@ class _MapScreenState extends State<MapScreen> {
 
       try {
         final position = await Geolocator.getCurrentPosition();
-        setState(() {
-          _currentLocation = LatLng(position.latitude, position.longitude);
-        });
+        final double bostonLat = 42.3601;
+        final double bostonLng = -71.0589;
+        final double distanceThreshold = 0.01;
+        final double distance = Geolocator.distanceBetween(
+          _currentLocation.latitude,
+          _currentLocation.longitude,
+          position.latitude,
+          position.longitude,
+        );
+        if (distance < distanceThreshold) {
+          setState(() {
+            _currentLocation = LatLng(position.latitude, position.longitude);
+          });
+        }
       } catch (e) {
         // Use default location if permission denied or error
         print('Location error: $e');
@@ -259,6 +270,115 @@ class _MapScreenState extends State<MapScreen> {
   List<Marker> _buildFlutterMapMarkers() {
     List<Marker> mapMarkers = [];
 
+    // Add event markers with aesthetic colors
+    for (final marker in _markers.where((m) => m.type == MarkerType.event)) {
+      final event = _events.firstWhere(
+        (e) => e.markerId == marker.id,
+        orElse: () => Event(
+          id: '',
+          markerId: marker.id,
+          title: 'Unknown Event',
+          category: EventCategory.other,
+          startTime: DateTime.now(),
+          endTime: DateTime.now(),
+          currentParticipants: 0,
+          status: EventStatus.upcoming,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      // Different colors for active vs upcoming events
+      final isActive = event.isActive;
+      final baseColor = _isDarkMode ? darkModeMedium : lightModeMedium;
+      final accentColor = _isDarkMode ? highlight : highlight;
+      
+      // Calculate outline effect based on event timing
+      final outlineEffect = _calculateEventOutlineEffect(event);
+      final outlineColor = outlineEffect['color'] as Color;
+      final outlineAlpha = outlineEffect['alpha'] as double;
+
+      mapMarkers.add(
+        Marker(
+          point: marker.location,
+          width: 44,
+          height: 44,
+          child: GestureDetector(
+            onTap: () => _onMarkerTapped(marker),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Main marker container
+                Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isActive
+                      ? [accentColor, accentColor.withValues(alpha: 0.8)]
+                      : [baseColor, baseColor.withValues(alpha: 0.8)],
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isActive
+                      ? (_isDarkMode ? highlight : lightModeDark)
+                      : (_isDarkMode ? highlight : Colors.white),
+                  width: 2.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                    spreadRadius: 1,
+                  ),
+                  BoxShadow(
+                    color: (isActive ? accentColor : baseColor).withValues(
+                      alpha: 0.3,
+                    ),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                  // Add a subtle glow for active events
+                  if (isActive)
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 0),
+                      spreadRadius: 2,
+                    ),
+                ],
+              ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    isActive ? Icons.flash_on_rounded : Icons.event_rounded,
+                    color: isActive
+                        ? (_isDarkMode ? highlight : lightModeDark)
+                        : (_isDarkMode ? highlight : Colors.white),
+                    size: 22,
+                  ),
+                ),
+                // Time-based outline glow
+                if (outlineAlpha > 0.1)
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: outlineColor.withValues(alpha: outlineAlpha),
+                        width: 3.0,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+
     // Add issue markers with red outline based on credibility
     // Red outline alpha is based on both vote score and credibility score
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
@@ -337,90 +457,6 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
               ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Add event markers with aesthetic colors
-    for (final marker in _markers.where((m) => m.type == MarkerType.event)) {
-      final event = _events.firstWhere(
-        (e) => e.markerId == marker.id,
-        orElse: () => Event(
-          id: '',
-          markerId: marker.id,
-          title: 'Unknown Event',
-          category: EventCategory.other,
-          startTime: DateTime.now(),
-          endTime: DateTime.now(),
-          currentParticipants: 0,
-          status: EventStatus.upcoming,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
-
-      // Different colors for active vs upcoming events
-      final isActive = event.isActive;
-      final baseColor = _isDarkMode ? darkModeMedium : lightModeMedium;
-      final accentColor = _isDarkMode ? highlight : highlight;
-
-      mapMarkers.add(
-        Marker(
-          point: marker.location,
-          width: 44,
-          height: 44,
-          child: GestureDetector(
-            onTap: () => _onMarkerTapped(marker),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isActive
-                      ? [accentColor, accentColor.withValues(alpha: 0.8)]
-                      : [baseColor, baseColor.withValues(alpha: 0.8)],
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isActive
-                      ? (_isDarkMode ? highlight : lightModeDark)
-                      : (_isDarkMode ? highlight : Colors.white),
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                    spreadRadius: 1,
-                  ),
-                  BoxShadow(
-                    color: (isActive ? accentColor : baseColor).withValues(
-                      alpha: 0.3,
-                    ),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                  // Add a subtle glow for active events
-                  if (isActive)
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 0),
-                      spreadRadius: 2,
-                    ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                isActive ? Icons.flash_on_rounded : Icons.event_rounded,
-                color: isActive
-                    ? (_isDarkMode ? highlight : lightModeDark)
-                    : (_isDarkMode ? highlight : Colors.white),
-                size: 22,
-              ),
             ),
           ),
         ),
@@ -511,6 +547,75 @@ class _MapScreenState extends State<MapScreen> {
     final outlineAlpha = averageScore * 0.8;
     
     return outlineAlpha.clamp(0.0, 0.8);
+  }
+
+  Map<String, dynamic> _calculateEventOutlineEffect(Event event) {
+    final now = DateTime.now();
+    final startTime = event.startTime;
+    final endTime = event.endTime;
+    
+    // Check if event is currently happening
+    if (now.isAfter(startTime) && now.isBefore(endTime)) {
+      return {
+        'color': Colors.yellow,
+        'alpha': 0.8,
+        'description': 'currently_occurring'
+      };
+    }
+    
+    // Calculate time until event starts (in hours)
+    final hoursUntilStart = startTime.difference(now).inHours;
+    final hoursAfterEnd = now.difference(endTime).inHours;
+    
+    // If event is in the past
+    if (hoursAfterEnd > 0) {
+      // Fade out events that ended more than 24 hours ago
+      final alpha = (1.0 - (hoursAfterEnd / 24.0)).clamp(0.0, 0.4);
+      return {
+        'color': Colors.grey,
+        'alpha': alpha,
+        'description': 'past_event'
+      };
+    }
+    
+    // Event is in the future
+    if (hoursUntilStart <= 1) {
+      // Very soon (within 1 hour) - bright yellow
+      return {
+        'color': Colors.yellow,
+        'alpha': 0.7,
+        'description': 'very_soon'
+      };
+    } else if (hoursUntilStart <= 6) {
+      // Soon (within 6 hours) - orange
+      return {
+        'color': Colors.orange,
+        'alpha': 0.6,
+        'description': 'soon'
+      };
+    } else if (hoursUntilStart <= 24) {
+      // Today (within 24 hours) - light orange
+      return {
+        'color': Colors.orange.withValues(alpha: 0.7),
+        'alpha': 0.5,
+        'description': 'today'
+      };
+    } else if (hoursUntilStart <= 168) { // 7 days
+      // This week - white with decreasing intensity
+      final alpha = (1.0 - (hoursUntilStart - 24) / 144.0).clamp(0.2, 0.4);
+      return {
+        'color': Colors.white,
+        'alpha': alpha,
+        'description': 'this_week'
+      };
+    } else {
+      // Too far out - minimal white glow
+      return {
+        'color': Colors.white,
+        'alpha': 0.1,
+        'description': 'far_future'
+      };
+    }
   }
 
   Future<void> _onReportIssue() async {
