@@ -78,13 +78,31 @@ class _ExpandableFabState extends State<ExpandableFab>
   }
 
   Widget _buildTapToCloseFab() {
-    return FloatingActionButton.large(
-      onPressed: _toggle,
-      backgroundColor: widget.iconColor, // swapped here
-      child: Icon(
-        Icons.close,
-        color: widget.backgroundColor, // swapped here
-        size: 30,
+    return Container(
+      width: kMainFabSize,
+      height: kMainFabSize,
+      decoration: BoxDecoration(
+        color: widget.iconColor,
+        borderRadius: BorderRadius.circular(kMainFabBorderRadius),
+        boxShadow: kFloatingButtonShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(kMainFabBorderRadius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(kMainFabBorderRadius),
+          onTap: _toggle,
+          child: Container(
+            width: kMainFabSize,
+            height: kMainFabSize,
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.close,
+              color: widget.backgroundColor,
+              size: kFloatingButtonIconSize + 6,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -105,10 +123,32 @@ class _ExpandableFabState extends State<ExpandableFab>
           opacity: _open ? 0.0 : 1.0,
           curve: const Interval(0.25, 1.0, curve: Curves.easeInOut),
           duration: const Duration(milliseconds: 250),
-          child: FloatingActionButton.large(
-            onPressed: _toggle,
-            backgroundColor: widget.backgroundColor,
-            child: Icon(Icons.add, color: widget.iconColor, size: kIconSize),
+          child: Container(
+            width: kMainFabSize,
+            height: kMainFabSize,
+            decoration: BoxDecoration(
+              color: widget.backgroundColor,
+              borderRadius: BorderRadius.circular(kMainFabBorderRadius),
+              boxShadow: kFloatingButtonShadow,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(kMainFabBorderRadius),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(kMainFabBorderRadius),
+                onTap: _toggle,
+                child: Container(
+                  width: kMainFabSize,
+                  height: kMainFabSize,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.add,
+                    color: widget.iconColor,
+                    size: kFloatingButtonIconSize + 6,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -119,10 +159,16 @@ class _ExpandableFabState extends State<ExpandableFab>
     final children = <Widget>[];
     final count = widget.children.length;
     for (var i = 0; i < count; i++) {
+      // Calculate distance so buttons are evenly spaced from each other
+      // First button: edge of main FAB + padding + half of action button
+      // Each subsequent button: previous position + button size + spacing
+      final firstButtonDistance = (kMainFabSize / 2) + 24 + (kFloatingButtonSize / 2); // 20px padding from main FAB
+      final buttonDistance = firstButtonDistance + (i * (kFloatingButtonSize + widget.distance));
+      
       children.add(
         _ExpandingActionButton(
           directionInDegrees: 90, // straight up
-          maxDistance: (widget.distance) * (i + 1) / count,
+          maxDistance: buttonDistance,
           progress: _expandAnimation,
           child: widget.children[i],
         ),
@@ -190,12 +236,30 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton.large(
-      onPressed: onPressed,
-      backgroundColor: backgroundColor,
-      child: IconTheme(
-        data: IconThemeData(color: iconColor, size: kIconSize),
-        child: icon,
+    return Container(
+      width: kFloatingButtonSize,
+      height: kFloatingButtonSize,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+        boxShadow: kFloatingButtonShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+          onTap: onPressed,
+          child: Container(
+            width: kFloatingButtonSize,
+            height: kFloatingButtonSize,
+            alignment: Alignment.center,
+            child: IconTheme(
+              data: IconThemeData(color: iconColor, size: kFloatingButtonIconSize),
+              child: icon,
+            ),
+          ),
+        ),
       ),
     );
   }

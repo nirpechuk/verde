@@ -307,141 +307,206 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'verde',
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w300,
-            fontFamily: 'Pacifico',
-          ),
-        ),
-        titleTextStyle: const TextStyle(fontStyle: FontStyle.italic),
-        leading: FloatingActionButton(
-          heroTag: "theme_toggle",
-          onPressed: _toggleMapTheme,
-          backgroundColor: _isDarkMode ? lightBrown : darkGreen,
-          child: Icon(
-            _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-            color: tan,
-          ),
-        ),
-        backgroundColor: _isDarkMode ? darkBrown : lightGreen,
-        foregroundColor: _isDarkMode ? lightBrown : darkGreen,
-        actions: [
-          if (SupabaseService.isAuthenticated) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.stars, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$_userPoints',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                // Main map
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: _currentLocation,
+                    initialZoom: 15.0,
+                    minZoom: 5.0,
+                    maxZoom: 90.0,
+                    onMapEvent: (event) {
+                      if (event is MapEventMoveEnd) {
+                        // Optionally reload markers when map moves
+                        // _loadMapData();
+                      }
+                    },
                   ),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.account_circle),
-              onSelected: (value) async {
-                if (value == 'signout') {
-                  await SupabaseService.signOut();
-                  await _loadUserData();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Signed out successfully'),
-                      backgroundColor: Colors.blue,
+                  children: [
+                    TileLayer(
+                      urlTemplate: _isDarkMode
+                          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                          : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
+                      userAgentPackageName: 'com.example.ecoaction',
+                      retinaMode: RetinaMode.isHighDensity(context),
                     ),
-                  );
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'signout',
+                    MarkerLayer(markers: _buildFlutterMapMarkers()),
+                  ],
+                ),
+                
+                // Dark mode toggle button - top left
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + kFloatingButtonPadding,
+                  left: kFloatingButtonPadding,
+                  child: Container(
+                    width: kFloatingButtonSize,
+                    height: kFloatingButtonSize,
+                    decoration: BoxDecoration(
+                      color: _isDarkMode ? darkModeMedium : lightModeDark,
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      boxShadow: kFloatingButtonShadow,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                        onTap: _toggleMapTheme,
+                        child: Container(
+                          width: kFloatingButtonSize,
+                          height: kFloatingButtonSize,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                            color: highlight,
+                            size: kFloatingButtonIconSize,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // User info and account - top right
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + kFloatingButtonPadding,
+                  right: kFloatingButtonPadding,
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.logout, color: Colors.red),
-                      const SizedBox(width: 8),
-                      const Text('Sign Out'),
+                      // Stars display (only when authenticated)
+                      if (SupabaseService.isAuthenticated) ...[
+                        Container(
+                          height: kFloatingButtonSize,
+                          padding: const EdgeInsets.symmetric(horizontal: kFloatingButtonPadding, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _isDarkMode ? darkModeDark.withValues(alpha: 0.95) : lightModeMedium.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            boxShadow: kFloatingButtonShadow,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.stars,
+                                size: kFloatingButtonIconSize - 4,
+                                color: _isDarkMode ? darkModeMedium : highlight,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$_userPoints',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: _isDarkMode ? darkModeMedium : highlight,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: kFloatingButtonSpacing),
+                      ],
+                      
+                      // Account button
+                      Container(
+                        width: kFloatingButtonSize,
+                        height: kFloatingButtonSize,
+                        decoration: BoxDecoration(
+                          color: _isDarkMode ? darkModeDark.withValues(alpha: 0.95) : lightModeMedium.withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          boxShadow: kFloatingButtonShadow,
+                        ),
+                        child: SupabaseService.isAuthenticated
+                            ? PopupMenuButton<String>(
+                                icon: Icon(
+                                  Icons.account_circle,
+                                  color: _isDarkMode ? darkModeMedium : highlight,
+                                  size: kFloatingButtonIconSize + 4,
+                                ),
+                                onSelected: (value) async {
+                                  if (value == 'signout') {
+                                    await SupabaseService.signOut();
+                                    await _loadUserData();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Signed out successfully'),
+                                        backgroundColor: Colors.blue,
+                                      ),
+                                    );
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'signout',
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.logout, color: Colors.red),
+                                        const SizedBox(width: 8),
+                                        const Text('Sign Out'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                ),
+                                offset: const Offset(0, 8),
+                              )
+                            : Material(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                  onTap: () async {
+                                    final result = await Navigator.push<bool>(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const AuthScreen()),
+                                    );
+                                    if (result == true) {
+                                      await _loadUserData();
+                                    }
+                                  },
+                                  child: Container(
+                                    width: kFloatingButtonSize,
+                                    height: kFloatingButtonSize,
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.login,
+                                      color: _isDarkMode ? darkModeMedium : lightModeDark,
+                                      size: kFloatingButtonIconSize + 4,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ] else ...[
-            TextButton.icon(
-              onPressed: () async {
-                final result = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AuthScreen()),
-                );
-                if (result == true) {
-                  await _loadUserData();
-                }
-              },
-              icon: const Icon(Icons.login, color: Colors.white),
-              label: const Text(
-                'Sign In',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _currentLocation,
-                initialZoom: 15.0,
-                minZoom: 5.0,
-                maxZoom: 90.0,
-                onMapEvent: (event) {
-                  if (event is MapEventMoveEnd) {
-                    // Optionally reload markers when map moves
-                    // _loadMapData();
-                  }
-                },
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: _isDarkMode
-                      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                  subdomains: const ['a', 'b', 'c', 'd'],
-                  userAgentPackageName: 'com.example.ecoaction',
-                  retinaMode: RetinaMode.isHighDensity(context),
-                ),
-                MarkerLayer(markers: _buildFlutterMapMarkers()),
               ],
             ),
 
       floatingActionButton: Stack(
         children: [
           ExpandableFab(
-            distance: kIconDistanceBetweenFab,
-            backgroundColor: _isDarkMode ? tan : lightGreen,
-            iconColor: _isDarkMode ? darkBrown : darkGreen,
+            distance: kFabButtonSpacing,
+            backgroundColor: _isDarkMode ? highlight : lightModeMedium,
+            iconColor: _isDarkMode ? darkModeDark : highlight,
             children: [
               ActionButton(
                 onPressed: _onCreateEvent,
-                backgroundColor: _isDarkMode ? tan : lightGreen,
-                iconColor: _isDarkMode ? darkBrown : darkGreen,
+                backgroundColor: _isDarkMode ? highlight : lightModeMedium,
+                iconColor: _isDarkMode ? darkModeDark : lightModeDark,
                 icon: const Icon(Icons.location_pin),
               ),
               ActionButton(
                 onPressed: _onReportIssue,
-                backgroundColor: _isDarkMode ? tan : lightGreen,
-                iconColor: _isDarkMode ? darkBrown : darkGreen,
+                backgroundColor: _isDarkMode ? highlight : lightModeMedium,
+                iconColor: _isDarkMode ? darkModeDark : lightModeDark,
                 icon: const Icon(Icons.add_alert),
               ),
             ],
