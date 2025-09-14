@@ -29,7 +29,8 @@ class _MapScreenState extends State<MapScreen> {
   ); // Default to Boston/MIT area
   List<AppMarker> _markers = [];
   List<Event> _events = [];
-  Map<String, Map<String, int>> _markerVoteStats = {}; // Store vote stats for each marker
+  Map<String, Map<String, int>> _markerVoteStats =
+      {}; // Store vote stats for each marker
   bool _isLoading = true;
   int _userPoints = 0;
   bool _isDarkMode = false;
@@ -170,7 +171,7 @@ class _MapScreenState extends State<MapScreen> {
       // Filter out issue markers that have linked fix events and load vote stats
       final filteredMarkers = <AppMarker>[];
       final Map<String, Map<String, int>> voteStats = {};
-      
+
       for (final marker in markers) {
         if (marker.type == MarkerType.issue) {
           // Load the issue to check if it has a linked event
@@ -179,13 +180,20 @@ class _MapScreenState extends State<MapScreen> {
             if (!issueIdsWithEvents.contains(issue.id)) {
               filteredMarkers.add(marker);
               // Load vote statistics for this issue marker
-              final issueVoteStats = await SupabaseService.getIssueVoteStats(issue.id);
+              final issueVoteStats = await SupabaseService.getIssueVoteStats(
+                issue.id,
+              );
               voteStats[marker.id] = issueVoteStats;
             }
           } catch (e) {
             // If we can't load the issue, include the marker anyway with default vote stats
             filteredMarkers.add(marker);
-            voteStats[marker.id] = {'upvotes': 0, 'downvotes': 0, 'total': 0, 'score': 0};
+            voteStats[marker.id] = {
+              'upvotes': 0,
+              'downvotes': 0,
+              'total': 0,
+              'score': 0,
+            };
           }
         } else {
           // Always include event markers
@@ -252,7 +260,7 @@ class _MapScreenState extends State<MapScreen> {
       final voteStats = _markerVoteStats[marker.id] ?? {'score': 0};
       final voteScore = voteStats['score'] ?? 0;
       final markerAlpha = _calculateMarkerAlpha(voteScore);
-      
+
       mapMarkers.add(
         Marker(
           point: marker.location,
@@ -266,20 +274,22 @@ class _MapScreenState extends State<MapScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    (_isDarkMode ? darkModeMedium : lightModeDark)
-                        .withValues(alpha: markerAlpha),
+                    (_isDarkMode ? darkModeMedium : lightModeDark).withValues(
+                      alpha: markerAlpha,
+                    ),
                     (_isDarkMode
-                        ? darkModeDark
-                        : lightModeDark.withValues(alpha: 0.8))
+                            ? darkModeDark
+                            : lightModeDark.withValues(alpha: 0.8))
                         .withValues(alpha: markerAlpha * 0.8),
                   ],
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: (_isDarkMode
-                      ? highlight.withValues(alpha: 0.8)
-                      : Colors.white)
-                      .withValues(alpha: markerAlpha),
+                  color:
+                      (_isDarkMode
+                              ? highlight.withValues(alpha: 0.8)
+                              : Colors.white)
+                          .withValues(alpha: markerAlpha),
                   width: 2.5,
                 ),
                 boxShadow: [
@@ -302,8 +312,9 @@ class _MapScreenState extends State<MapScreen> {
                 offset: const Offset(0, -1),
                 child: Icon(
                   Icons.warning_rounded,
-                  color: (_isDarkMode ? highlight : Colors.white)
-                      .withValues(alpha: markerAlpha),
+                  color: (_isDarkMode ? highlight : Colors.white).withValues(
+                    alpha: markerAlpha,
+                  ),
                   size: 22,
                 ),
               ),
@@ -404,14 +415,13 @@ class _MapScreenState extends State<MapScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            MarkerDetailsScreen(
-              marker: marker, 
-              onDataChanged: () {
-                _loadMapData(); // Reload map data including vote statistics
-                _loadUserData(); // Reload user data as well
-              },
-            ),
+        builder: (context) => MarkerDetailsScreen(
+          marker: marker,
+          onDataChanged: () {
+            _loadMapData(); // Reload map data including vote statistics
+            _loadUserData(); // Reload user data as well
+          },
+        ),
       ),
     );
   }
@@ -423,22 +433,17 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   /// Calculate alpha transparency based on vote score
-  /// Returns values between 0.3 (very transparent) and 1.0 (fully opaque)
   double _calculateMarkerAlpha(int voteScore) {
     // Issues with positive scores (>= 0) should be fully opaque
     if (voteScore >= 0) {
       return 1.0;
     }
-    
+
     // For negative scores, gradually decrease alpha
-    // Score of -1 -> alpha 0.8
-    // Score of -2 -> alpha 0.6  
-    // Score of -3 -> alpha 0.4
-    // Score <= -4 -> alpha 0.3 (minimum visibility)
     const double baseAlpha = 1.0;
-    const double alphaDecrement = 0.2;
+    const double alphaDecrement = 0.25;
     const double minAlpha = 0.3;
-    
+
     final double calculatedAlpha = baseAlpha + (voteScore * alphaDecrement);
     return calculatedAlpha.clamp(minAlpha, baseAlpha);
   }
