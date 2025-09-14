@@ -270,7 +270,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Marker> _buildFlutterMapMarkers() {
     List<Marker> mapMarkers = [];
 
-    // Add event markers with aesthetic colors
+    // Add event markers with aesthetic colors (skip past events)
     for (final marker in _markers.where((m) => m.type == MarkerType.event)) {
       final event = _events.firstWhere(
         (e) => e.markerId == marker.id,
@@ -287,6 +287,11 @@ class _MapScreenState extends State<MapScreen> {
           updatedAt: DateTime.now(),
         ),
       );
+
+      // Skip events that have already ended
+      if (DateTime.now().isAfter(event.endTime)) {
+        continue;
+      }
 
       // Different colors for active vs upcoming events
       final isActive = event.isActive;
@@ -556,9 +561,13 @@ class _MapScreenState extends State<MapScreen> {
     
     // Check if event is currently happening
     if (now.isAfter(startTime) && now.isBefore(endTime)) {
+      // Calculate time pulse phase (0.0 - 1.0)
+      final pulsePhase = (now.microsecond / Duration.microsecondsPerMillisecond) % 1000 / 1000;
+      final pulseAlpha = pulsePhase < 0.5 ? pulsePhase * 2 : 1 - (pulsePhase - 0.5) * 2;
+      
       return {
         'color': Colors.yellow,
-        'alpha': 0.8,
+        'alpha': pulseAlpha,
         'description': 'currently_occurring'
       };
     }
@@ -567,22 +576,12 @@ class _MapScreenState extends State<MapScreen> {
     final hoursUntilStart = startTime.difference(now).inHours;
     final hoursAfterEnd = now.difference(endTime).inHours;
     
-    // If event is in the past
-    if (hoursAfterEnd > 0) {
-      // Fade out events that ended more than 24 hours ago
-      final alpha = (1.0 - (hoursAfterEnd / 24.0)).clamp(0.0, 0.4);
-      return {
-        'color': Colors.grey,
-        'alpha': alpha,
-        'description': 'past_event'
-      };
-    }
     
     // Event is in the future
     if (hoursUntilStart <= 1) {
       // Very soon (within 1 hour) - bright yellow
       return {
-        'color': Colors.yellow,
+        'color': Colors.orange,
         'alpha': 0.7,
         'description': 'very_soon'
       };
@@ -596,23 +595,22 @@ class _MapScreenState extends State<MapScreen> {
     } else if (hoursUntilStart <= 24) {
       // Today (within 24 hours) - light orange
       return {
-        'color': Colors.orange.withValues(alpha: 0.7),
+        'color': Colors.orange,
         'alpha': 0.5,
         'description': 'today'
       };
     } else if (hoursUntilStart <= 168) { // 7 days
-      // This week - white with decreasing intensity
-      final alpha = (1.0 - (hoursUntilStart - 24) / 144.0).clamp(0.2, 0.4);
+      // This week - yellow with increasing intensity
+      final intensity = 0.5 * ((hoursUntilStart - 24)/ 144.0).clamp(0.0, 1);
       return {
-        'color': Colors.white,
-        'alpha': alpha,
+        'color': Colors.orange,
+        'alpha': intensity,
         'description': 'this_week'
       };
     } else {
       // Too far out - minimal white glow
       return {
         'color': Colors.white,
-        'alpha': 0.1,
         'description': 'far_future'
       };
     }
