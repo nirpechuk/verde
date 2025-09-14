@@ -8,28 +8,28 @@ import '../models/user.dart' as app_user;
 
 class SupabaseService {
   static final SupabaseClient _client = Supabase.instance.client;
-  
+
   // Authentication methods
   static bool get isAuthenticated => _client.auth.currentUser != null;
-  
+
   static User? get currentAuthUser => _client.auth.currentUser;
-  
+
   static Future<void> signOut() async {
     await _client.auth.signOut();
   }
-  
+
   // User methods
   static Future<app_user.User?> getCurrentUser() async {
     final user = _client.auth.currentUser;
     if (user == null) return null;
-    
+
     try {
       final response = await _client
           .from('users')
           .select()
           .eq('id', user.id)
           .single();
-      
+
       return app_user.User.fromJson(response);
     } catch (e) {
       // User doesn't exist in our users table, create them
@@ -39,13 +39,13 @@ class SupabaseService {
         'username': user.email?.split('@')[0],
         'points': 0,
       };
-      
+
       final response = await _client
           .from('users')
           .insert(newUser)
           .select()
           .single();
-      
+
       return app_user.User.fromJson(response);
     }
   }
@@ -66,7 +66,10 @@ class SupabaseService {
     return response.map<AppMarker>((json) => AppMarker.fromJson(json)).toList();
   }
 
-  static Future<AppMarker> createMarker(MarkerType type, LatLng location) async {
+  static Future<AppMarker> createMarker(
+    MarkerType type,
+    LatLng location,
+  ) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
@@ -157,7 +160,7 @@ class SupabaseService {
           .eq('issue_id', issueId)
           .eq('user_id', user.id)
           .maybeSingle();
-      
+
       return response != null;
     } catch (e) {
       return false;
@@ -176,7 +179,7 @@ class SupabaseService {
           .eq('issue_id', issueId)
           .eq('user_id', user.id)
           .maybeSingle();
-      
+
       return response?['vote'];
     } catch (e) {
       return null;
@@ -190,10 +193,10 @@ class SupabaseService {
           .from('issue_votes')
           .select('vote')
           .eq('issue_id', issueId);
-      
+
       int upvotes = 0;
       int downvotes = 0;
-      
+
       for (final vote in response) {
         if (vote['vote'] == 1) {
           upvotes++;
@@ -201,7 +204,7 @@ class SupabaseService {
           downvotes++;
         }
       }
-      
+
       return {
         'upvotes': upvotes,
         'downvotes': downvotes,
@@ -209,12 +212,7 @@ class SupabaseService {
         'score': upvotes - downvotes,
       };
     } catch (e) {
-      return {
-        'upvotes': 0,
-        'downvotes': 0,
-        'total': 0,
-        'score': 0,
-      };
+      return {'upvotes': 0, 'downvotes': 0, 'total': 0, 'score': 0};
     }
   }
 
@@ -224,7 +222,7 @@ class SupabaseService {
 
     // Check if user has already voted
     final currentVote = await getUserVoteOnIssue(issueId);
-    
+
     if (currentVote == vote) {
       throw Exception('You have already cast this vote on this issue');
     }
@@ -309,10 +307,15 @@ class SupabaseService {
     final eventData = {
       'marker_id': marker.id,
       'title': 'Fix: $issueTitle',
-      'description': 'Community event to address the reported issue: $issueTitle',
+      'description':
+          'Community event to address the reported issue: $issueTitle',
       'category': _eventCategoryToString(EventCategory.cleanup),
-      'start_time': DateTime.now().add(const Duration(days: 1)).toIso8601String(),
-      'end_time': DateTime.now().add(const Duration(days: 1, hours: 2)).toIso8601String(),
+      'start_time': DateTime.now()
+          .add(const Duration(days: 1))
+          .toIso8601String(),
+      'end_time': DateTime.now()
+          .add(const Duration(days: 1, hours: 2))
+          .toIso8601String(),
       'max_participants': 20,
       'issue_id': issueId, // Link to the issue
     };
@@ -335,9 +338,7 @@ class SupabaseService {
         .select('issue_id')
         .not('issue_id', 'is', null);
 
-    return response
-        .map<String>((row) => row['issue_id'] as String)
-        .toList();
+    return response.map<String>((row) => row['issue_id'] as String).toList();
   }
 
   static Future<String?> getUserRsvpStatus(String eventId) async {
@@ -351,7 +352,7 @@ class SupabaseService {
           .eq('event_id', eventId)
           .eq('user_id', user.id)
           .maybeSingle();
-      
+
       return response?['status'];
     } catch (e) {
       return null;
@@ -364,7 +365,7 @@ class SupabaseService {
 
     // Check if user has already RSVPed
     final existingStatus = await getUserRsvpStatus(eventId);
-    
+
     if (existingStatus != null) {
       // Update existing RSVP
       await _client
@@ -393,16 +394,13 @@ class SupabaseService {
       final user = _client.auth.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${user.id}.jpg';
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${user.id}.jpg';
       final filePath = '$folder/$fileName';
 
-      await _client.storage
-          .from('images')
-          .upload(filePath, imageFile);
+      await _client.storage.from('images').upload(filePath, imageFile);
 
-      final publicUrl = _client.storage
-          .from('images')
-          .getPublicUrl(filePath);
+      final publicUrl = _client.storage.from('images').getPublicUrl(filePath);
 
       return publicUrl;
     } catch (e) {
@@ -418,9 +416,7 @@ class SupabaseService {
       final pathSegments = uri.pathSegments;
       if (pathSegments.length >= 3) {
         final filePath = pathSegments.sublist(2).join('/');
-        await _client.storage
-            .from('images')
-            .remove([filePath]);
+        await _client.storage.from('images').remove([filePath]);
       }
     } catch (e) {
       print('Error deleting image: $e');
@@ -428,16 +424,23 @@ class SupabaseService {
   }
 
   // Helper methods
-  static Future<void> _awardPoints(String actionType, int points, String referenceId) async {
+  static Future<void> _awardPoints(
+    String actionType,
+    int points,
+    String referenceId,
+  ) async {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
-    await _client.rpc('award_points', params: {
-      'p_user_id': user.id,
-      'p_action_type': actionType,
-      'p_points': points,
-      'p_reference_id': referenceId,
-    });
+    await _client.rpc(
+      'award_points',
+      params: {
+        'p_user_id': user.id,
+        'p_action_type': actionType,
+        'p_points': points,
+        'p_reference_id': referenceId,
+      },
+    );
   }
 
   static String _issueCategoryToString(IssueCategory category) {

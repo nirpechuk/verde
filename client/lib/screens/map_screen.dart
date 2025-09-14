@@ -32,7 +32,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isLoading = true;
   int _userPoints = 0;
   bool _isDarkMode = false;
-  
+
   // Realtime subscriptions
   RealtimeChannel? _markersChannel;
   RealtimeChannel? _eventsChannel;
@@ -99,7 +99,7 @@ class _MapScreenState extends State<MapScreen> {
 
   void _setupRealtimeSubscriptions() {
     final client = Supabase.instance.client;
-    
+
     // Subscribe to markers table changes
     _markersChannel = client
         .channel('markers_changes')
@@ -160,10 +160,11 @@ class _MapScreenState extends State<MapScreen> {
         northeast,
       );
       final events = await SupabaseService.getEvents();
-      
+
       // Get issue IDs that have linked fix events
-      final issueIdsWithEvents = await SupabaseService.getIssueIdsWithLinkedEvents();
-      
+      final issueIdsWithEvents =
+          await SupabaseService.getIssueIdsWithLinkedEvents();
+
       // Filter out issue markers that have linked fix events
       final filteredMarkers = <AppMarker>[];
       for (final marker in markers) {
@@ -252,12 +253,16 @@ class _MapScreenState extends State<MapScreen> {
                   end: Alignment.bottomRight,
                   colors: [
                     _isDarkMode ? darkModeMedium : lightModeDark,
-                    _isDarkMode ? darkModeDark : lightModeDark.withValues(alpha: 0.8),
+                    _isDarkMode
+                        ? darkModeDark
+                        : lightModeDark.withValues(alpha: 0.8),
                   ],
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: _isDarkMode ? highlight.withValues(alpha: 0.8) : Colors.white,
+                  color: _isDarkMode
+                      ? highlight.withValues(alpha: 0.8)
+                      : Colors.white,
                   width: 2.5,
                 ),
                 boxShadow: [
@@ -268,7 +273,8 @@ class _MapScreenState extends State<MapScreen> {
                     spreadRadius: 1,
                   ),
                   BoxShadow(
-                    color: (_isDarkMode ? darkModeMedium : lightModeDark).withValues(alpha: 0.3),
+                    color: (_isDarkMode ? darkModeMedium : lightModeDark)
+                        .withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -324,19 +330,15 @@ class _MapScreenState extends State<MapScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: isActive ? [
-                    accentColor,
-                    accentColor.withValues(alpha: 0.8),
-                  ] : [
-                    baseColor,
-                    baseColor.withValues(alpha: 0.8),
-                  ],
+                  colors: isActive
+                      ? [accentColor, accentColor.withValues(alpha: 0.8)]
+                      : [baseColor, baseColor.withValues(alpha: 0.8)],
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isActive 
-                    ? (_isDarkMode ? darkModeDark : lightModeDark)
-                    : (_isDarkMode ? darkModeDark : Colors.white),
+                  color: isActive
+                      ? (_isDarkMode ? darkModeDark : lightModeDark)
+                      : (_isDarkMode ? darkModeDark : Colors.white),
                   width: 2.5,
                 ),
                 boxShadow: [
@@ -347,25 +349,28 @@ class _MapScreenState extends State<MapScreen> {
                     spreadRadius: 1,
                   ),
                   BoxShadow(
-                    color: (isActive ? accentColor : baseColor).withValues(alpha: 0.3),
+                    color: (isActive ? accentColor : baseColor).withValues(
+                      alpha: 0.3,
+                    ),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
                   // Add a subtle glow for active events
-                  if (isActive) BoxShadow(
-                    color: accentColor.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 0),
-                    spreadRadius: 2,
-                  ),
+                  if (isActive)
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 0),
+                      spreadRadius: 2,
+                    ),
                 ],
               ),
               alignment: Alignment.center,
               child: Icon(
                 isActive ? Icons.flash_on_rounded : Icons.event_rounded,
-                color: isActive 
-                  ? (_isDarkMode ? darkModeDark : lightModeDark)
-                  : (_isDarkMode ? darkModeDark : Colors.white),
+                color: isActive
+                    ? (_isDarkMode ? darkModeDark : lightModeDark)
+                    : (_isDarkMode ? darkModeDark : Colors.white),
                 size: 22,
               ),
             ),
@@ -483,24 +488,32 @@ class _MapScreenState extends State<MapScreen> {
                     MarkerLayer(markers: _buildFlutterMapMarkers()),
                   ],
                 ),
-                
+
                 // Dark mode toggle button - top left
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + kFloatingButtonPadding,
+                  top:
+                      MediaQuery.of(context).padding.top +
+                      kFloatingButtonPadding,
                   left: kFloatingButtonPadding,
                   child: Container(
                     width: kFloatingButtonSize,
                     height: kFloatingButtonSize,
                     decoration: BoxDecoration(
                       color: _isDarkMode ? darkModeMedium : lightModeDark,
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
                       boxShadow: kFloatingButtonShadow,
                     ),
                     child: Material(
                       color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
                         onTap: _toggleMapTheme,
                         child: Container(
                           width: kFloatingButtonSize,
@@ -516,10 +529,12 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                 ),
-                
+
                 // User info and account - top right
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + kFloatingButtonPadding,
+                  top:
+                      MediaQuery.of(context).padding.top +
+                      kFloatingButtonPadding,
                   right: kFloatingButtonPadding,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -528,10 +543,17 @@ class _MapScreenState extends State<MapScreen> {
                       if (SupabaseService.isAuthenticated) ...[
                         Container(
                           height: kFloatingButtonSize,
-                          padding: const EdgeInsets.symmetric(horizontal: kFloatingButtonPadding, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: kFloatingButtonPadding,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
-                            color: _isDarkMode ? darkModeDark.withValues(alpha: 0.95) : lightModeMedium.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            color: _isDarkMode
+                                ? darkModeDark.withValues(alpha: 0.95)
+                                : lightModeMedium.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(
+                              kFloatingButtonBorderRadius,
+                            ),
                             boxShadow: kFloatingButtonShadow,
                           ),
                           child: Row(
@@ -548,7 +570,9 @@ class _MapScreenState extends State<MapScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: _isDarkMode ? darkModeMedium : highlight,
+                                  color: _isDarkMode
+                                      ? darkModeMedium
+                                      : highlight,
                                 ),
                               ),
                             ],
@@ -556,21 +580,27 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                         const SizedBox(width: kFloatingButtonSpacing),
                       ],
-                      
+
                       // Account button
                       Container(
                         width: kFloatingButtonSize,
                         height: kFloatingButtonSize,
                         decoration: BoxDecoration(
-                          color: _isDarkMode ? darkModeDark.withValues(alpha: 0.95) : lightModeMedium.withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          color: _isDarkMode
+                              ? darkModeDark.withValues(alpha: 0.95)
+                              : lightModeMedium.withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
                           boxShadow: kFloatingButtonShadow,
                         ),
                         child: SupabaseService.isAuthenticated
                             ? PopupMenuButton<String>(
                                 icon: Icon(
                                   Icons.account_circle,
-                                  color: _isDarkMode ? darkModeMedium : highlight,
+                                  color: _isDarkMode
+                                      ? darkModeMedium
+                                      : highlight,
                                   size: kFloatingButtonIconSize + 4,
                                 ),
                                 onSelected: (value) async {
@@ -579,7 +609,9 @@ class _MapScreenState extends State<MapScreen> {
                                     await _loadUserData();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Signed out successfully'),
+                                        content: Text(
+                                          'Signed out successfully',
+                                        ),
                                         backgroundColor: Colors.blue,
                                       ),
                                     );
@@ -590,7 +622,10 @@ class _MapScreenState extends State<MapScreen> {
                                     value: 'signout',
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.logout, color: Colors.red),
+                                        const Icon(
+                                          Icons.logout,
+                                          color: Colors.red,
+                                        ),
                                         const SizedBox(width: 8),
                                         const Text('Sign Out'),
                                       ],
@@ -598,19 +633,28 @@ class _MapScreenState extends State<MapScreen> {
                                   ),
                                 ],
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                  borderRadius: BorderRadius.circular(
+                                    kFloatingButtonBorderRadius,
+                                  ),
                                 ),
                                 offset: const Offset(0, 8),
                               )
                             : Material(
                                 color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                borderRadius: BorderRadius.circular(
+                                  kFloatingButtonBorderRadius,
+                                ),
                                 child: InkWell(
-                                  borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                  borderRadius: BorderRadius.circular(
+                                    kFloatingButtonBorderRadius,
+                                  ),
                                   onTap: () async {
                                     final result = await Navigator.push<bool>(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const AuthScreen()),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const AuthScreen(),
+                                      ),
                                     );
                                     if (result == true) {
                                       await _loadUserData();
@@ -622,7 +666,9 @@ class _MapScreenState extends State<MapScreen> {
                                     alignment: Alignment.center,
                                     child: Icon(
                                       Icons.login,
-                                      color: _isDarkMode ? darkModeMedium : lightModeDark,
+                                      color: _isDarkMode
+                                          ? darkModeMedium
+                                          : lightModeDark,
                                       size: kFloatingButtonIconSize + 4,
                                     ),
                                   ),
@@ -661,8 +707,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 }
-
-
 
 // FloatingActionButton(
 //   heroTag: "report_issue",

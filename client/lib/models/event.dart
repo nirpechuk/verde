@@ -140,11 +140,14 @@ class Event {
     }
   }
 
-  bool get isFull => maxParticipants != null && currentParticipants >= maxParticipants!;
+  bool get isFull =>
+      maxParticipants != null && currentParticipants >= maxParticipants!;
 
   bool get isActive {
     final now = DateTime.now();
-    return now.isAfter(startTime) && now.isBefore(endTime) && status == EventStatus.active;
+    return now.isAfter(startTime) &&
+        now.isBefore(endTime) &&
+        status == EventStatus.active;
   }
 
   Event copyWith({

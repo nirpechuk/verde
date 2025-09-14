@@ -162,9 +162,13 @@ class _ExpandableFabState extends State<ExpandableFab>
       // Calculate distance so buttons are evenly spaced from each other
       // First button: edge of main FAB + padding + half of action button
       // Each subsequent button: previous position + button size + spacing
-      final firstButtonDistance = (kMainFabSize / 2) + 24 + (kFloatingButtonSize / 2); // 20px padding from main FAB
-      final buttonDistance = firstButtonDistance + (i * (kFloatingButtonSize + widget.distance));
-      
+      final firstButtonDistance =
+          (kMainFabSize / 2) +
+          24 +
+          (kFloatingButtonSize / 2); // 20px padding from main FAB
+      final buttonDistance =
+          firstButtonDistance + (i * (kFloatingButtonSize + widget.distance));
+
       children.add(
         _ExpandingActionButton(
           directionInDegrees: 90, // straight up
@@ -255,7 +259,10 @@ class ActionButton extends StatelessWidget {
             height: kFloatingButtonSize,
             alignment: Alignment.center,
             child: IconTheme(
-              data: IconThemeData(color: iconColor, size: kFloatingButtonIconSize),
+              data: IconThemeData(
+                color: iconColor,
+                size: kFloatingButtonIconSize,
+              ),
               child: icon,
             ),
           ),

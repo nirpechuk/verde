@@ -108,7 +108,9 @@ Provide your JSON response:
       // Normalize credibility score to 0-10 range
       var credibility = 0;
       if (payload['credibility_score'] is num) {
-        credibility = (payload['credibility_score'] as num).clamp(0, 10).toInt();
+        credibility = (payload['credibility_score'] as num)
+            .clamp(0, 10)
+            .toInt();
       }
       payload['credibility_score'] = credibility;
 

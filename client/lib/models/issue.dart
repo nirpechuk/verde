@@ -1,9 +1,4 @@
-enum IssueCategory {
-  waste,
-  pollution,
-  water,
-  other,
-}
+enum IssueCategory { waste, pollution, water, other }
 
 enum IssueStatus { active, resolved, removed }
 

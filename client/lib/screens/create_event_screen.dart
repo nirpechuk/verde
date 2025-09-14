@@ -27,7 +27,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _maxParticipantsController = TextEditingController();
-  
+
   EventCategory _selectedCategory = EventCategory.cleanup;
   DateTime _startDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _startTime = const TimeOfDay(hour: 10, minute: 0);
@@ -89,10 +89,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> _selectEndTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: _endTime,
-    );
+    final time = await showTimePicker(context: context, initialTime: _endTime);
     if (time != null) {
       setState(() {
         _endTime = time;
@@ -131,9 +128,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error taking photo: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error taking photo: $e')));
     }
   }
 
@@ -168,8 +165,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       await SupabaseService.createEvent(
         markerId: marker.id,
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
         category: _selectedCategory,
         startTime: _startDateTime,
@@ -190,9 +187,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       widget.onEventCreated();
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating event: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error creating event: $e')));
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -203,7 +200,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: isDarkMode ? darkModeDark : Colors.grey[50],
       body: SafeArea(
@@ -223,14 +220,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         height: kFloatingButtonSize,
                         decoration: BoxDecoration(
                           color: isDarkMode ? darkModeMedium : lightModeMedium,
-                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
                           boxShadow: kFloatingButtonShadow,
                         ),
                         child: Material(
                           color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            borderRadius: BorderRadius.circular(
+                              kFloatingButtonBorderRadius,
+                            ),
                             onTap: () => Navigator.pop(context),
                             child: Icon(
                               Icons.arrow_back_rounded,
@@ -254,328 +257,417 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                Card(
-                  child: InkWell(
-                    onTap: _pickImage,
-                    child: Container(
-                      height: 120,
-                      padding: const EdgeInsets.all(16),
-                      child: _selectedImage != null
-                          ? Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(
-                                    _selectedImage!,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                const Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Photo Added',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text('Tap to change photo'),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            )
-                          : const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 8),
-                                Text('Tap to add photo (optional)'),
-                              ],
-                            ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Event Title *',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
-                    ),
-                    hintText: 'e.g., Community Park Cleanup',
-                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
-                    filled: true,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a title';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<EventCategory>(
-                  value: _selectedCategory,
-                  decoration: InputDecoration(
-                    labelText: 'Category *',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
-                    ),
-                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
-                    filled: true,
-                  ),
-                  items: EventCategory.values.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(_getCategoryDisplayName(category)),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
-                    ),
-                    hintText: 'Event details, what to bring, etc...',
-                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
-                    filled: true,
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Card(
-                        child: InkWell(
-                          onTap: _selectStartDate,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Start Date'),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${_startDate.month.toString().padLeft(2, '0')}/${_startDate.day.toString().padLeft(2, '0')}/${_startDate.year}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Card(
-                        child: InkWell(
-                          onTap: _selectStartTime,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Start Time'),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _startTime.format(context),
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Card(
-                        child: InkWell(
-                          onTap: _selectEndDate,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('End Date'),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${_endDate.month.toString().padLeft(2, '0')}/${_endDate.day.toString().padLeft(2, '0')}/${_endDate.year}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Card(
-                        child: InkWell(
-                          onTap: _selectEndTime,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('End Time'),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _endTime.format(context),
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _maxParticipantsController,
-                  decoration: InputDecoration(
-                    labelText: 'Max Participants (Optional)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
-                    ),
-                    hintText: 'Leave empty for unlimited',
-                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
-                    filled: true,
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value != null && value.trim().isNotEmpty) {
-                      final number = int.tryParse(value.trim());
-                      if (number == null || number <= 0) {
-                        return 'Please enter a valid positive number';
-                      }
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  height: kFloatingButtonSize,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: _isSubmitting ? [
-                        (isDarkMode ? darkModeMedium : lightModeMedium).withValues(alpha: 0.5),
-                        (isDarkMode ? darkModeMedium : lightModeMedium).withValues(alpha: 0.5),
-                      ] : [
-                        isDarkMode ? lightModeMedium : lightModeMedium,
-                        isDarkMode ? lightModeDark : lightModeDark,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                    boxShadow: _isSubmitting ? [] : kFloatingButtonShadow,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                  Card(
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-                      onTap: _isSubmitting ? null : _submitEvent,
+                      onTap: _pickImage,
                       child: Container(
-                        alignment: Alignment.center,
-                        child:
-                        _isSubmitting
-                            ? CircularProgressIndicator(
-                                color: isDarkMode ? highlight : Colors.white,
-                                strokeWidth: 2,
+                        height: 120,
+                        padding: const EdgeInsets.all(16),
+                        child: _selectedImage != null
+                            ? Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(
+                                      _selectedImage!,
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Photo Added',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text('Tap to change photo'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               )
-                            : Text(
-                                'Create Event (+20 Points)',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDarkMode ? highlight : Colors.white,
-                                ),
+                            : const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text('Tap to add photo (optional)'),
+                                ],
                               ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      labelText: 'Event Title *',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? highlight : lightModeDark,
+                          width: 2,
+                        ),
+                      ),
+                      hintText: 'e.g., Community Park Cleanup',
+                      fillColor: isDarkMode
+                          ? darkModeMedium.withValues(alpha: 0.3)
+                          : Colors.white,
+                      filled: true,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a title';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<EventCategory>(
+                    value: _selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: 'Category *',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? highlight : lightModeDark,
+                          width: 2,
+                        ),
+                      ),
+                      fillColor: isDarkMode
+                          ? darkModeMedium.withValues(alpha: 0.3)
+                          : Colors.white,
+                      filled: true,
+                    ),
+                    items: EventCategory.values.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(_getCategoryDisplayName(category)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Description (Optional)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? highlight : lightModeDark,
+                          width: 2,
+                        ),
+                      ),
+                      hintText: 'Event details, what to bring, etc...',
+                      fillColor: isDarkMode
+                          ? darkModeMedium.withValues(alpha: 0.3)
+                          : Colors.white,
+                      filled: true,
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          child: InkWell(
+                            onTap: _selectStartDate,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Start Date'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_startDate.month.toString().padLeft(2, '0')}/${_startDate.day.toString().padLeft(2, '0')}/${_startDate.year}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: InkWell(
+                            onTap: _selectStartTime,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Start Time'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _startTime.format(context),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Card(
+                          child: InkWell(
+                            onTap: _selectEndDate,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('End Date'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_endDate.month.toString().padLeft(2, '0')}/${_endDate.day.toString().padLeft(2, '0')}/${_endDate.year}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Card(
+                          child: InkWell(
+                            onTap: _selectEndTime,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('End Time'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _endTime.format(context),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _maxParticipantsController,
+                    decoration: InputDecoration(
+                      labelText: 'Max Participants (Optional)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        borderSide: BorderSide(
+                          color: isDarkMode ? highlight : lightModeDark,
+                          width: 2,
+                        ),
+                      ),
+                      hintText: 'Leave empty for unlimited',
+                      fillColor: isDarkMode
+                          ? darkModeMedium.withValues(alpha: 0.3)
+                          : Colors.white,
+                      filled: true,
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value != null && value.trim().isNotEmpty) {
+                        final number = int.tryParse(value.trim());
+                        if (number == null || number <= 0) {
+                          return 'Please enter a valid positive number';
+                        }
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    width: double.infinity,
+                    height: kFloatingButtonSize,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: _isSubmitting
+                            ? [
+                                (isDarkMode ? darkModeMedium : lightModeMedium)
+                                    .withValues(alpha: 0.5),
+                                (isDarkMode ? darkModeMedium : lightModeMedium)
+                                    .withValues(alpha: 0.5),
+                              ]
+                            : [
+                                isDarkMode ? lightModeMedium : lightModeMedium,
+                                isDarkMode ? lightModeDark : lightModeDark,
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
+                      boxShadow: _isSubmitting ? [] : kFloatingButtonShadow,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(
+                          kFloatingButtonBorderRadius,
+                        ),
+                        onTap: _isSubmitting ? null : _submitEvent,
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: _isSubmitting
+                              ? CircularProgressIndicator(
+                                  color: isDarkMode ? highlight : Colors.white,
+                                  strokeWidth: 2,
+                                )
+                              : Text(
+                                  'Create Event (+20 Points)',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDarkMode
+                                        ? highlight
+                                        : Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // Move location section to bottom
                   Card(
                     elevation: 0,
-                    color: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                    color: isDarkMode
+                        ? darkModeMedium.withValues(alpha: 0.3)
+                        : Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
                       side: BorderSide(
-                        color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
+                        color: isDarkMode
+                            ? darkModeMedium
+                            : lightModeMedium.withValues(alpha: 0.3),
                       ),
                     ),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderRadius: BorderRadius.circular(
+                        kFloatingButtonBorderRadius,
+                      ),
                       onTap: () async {
                         final result = await Navigator.push<LatLng>(
                           context,
@@ -610,13 +702,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: isDarkMode ? highlight : lightModeDark,
+                                    color: isDarkMode
+                                        ? highlight
+                                        : lightModeDark,
                                   ),
                                 ),
                                 const Spacer(),
                                 Icon(
                                   Icons.edit_rounded,
-                                  color: isDarkMode ? darkModeMedium : lightModeMedium,
+                                  color: isDarkMode
+                                      ? darkModeMedium
+                                      : lightModeMedium,
                                   size: 18,
                                 ),
                               ],
@@ -626,7 +722,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                               'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
                               'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
                               style: TextStyle(
-                                color: isDarkMode ? darkModeMedium : Colors.grey[600],
+                                color: isDarkMode
+                                    ? darkModeMedium
+                                    : Colors.grey[600],
                                 fontSize: 14,
                               ),
                             ),
@@ -634,7 +732,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             Text(
                               'Tap to change location',
                               style: TextStyle(
-                                color: isDarkMode ? lightModeMedium : lightModeDark,
+                                color: isDarkMode
+                                    ? lightModeMedium
+                                    : lightModeDark,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),

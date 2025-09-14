@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthScreen extends StatefulWidget {
-  final String? actionContext; // e.g., "to report an issue" or "to create an event"
-  
+  final String?
+  actionContext; // e.g., "to report an issue" or "to create an event"
+
   const AuthScreen({super.key, this.actionContext});
 
   @override
@@ -14,7 +15,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _isSignUp = false;
   bool _isLoading = false;
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -36,7 +37,7 @@ class _AuthScreenState extends State<AuthScreen> {
           password: password,
           emailRedirectTo: null, // Disable email verification
         );
-        
+
         if (response.user != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -51,7 +52,7 @@ class _AuthScreenState extends State<AuthScreen> {
           email: email,
           password: password,
         );
-        
+
         if (response.user != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -64,10 +65,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } on AuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +120,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
-              
+
               // App branding
               Container(
                 padding: const EdgeInsets.all(24),
@@ -151,17 +149,14 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const Text(
                       'Environmental crowdsourcing for good',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -180,9 +175,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -201,9 +196,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   return null;
                 },
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               ElevatedButton(
                 onPressed: _isLoading ? null : _authenticate,
                 style: ElevatedButton.styleFrom(
@@ -215,12 +210,15 @@ class _AuthScreenState extends State<AuthScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
                         _isSignUp ? 'Create Account' : 'Sign In',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               TextButton(
                 onPressed: () {
                   setState(() {
@@ -228,15 +226,15 @@ class _AuthScreenState extends State<AuthScreen> {
                   });
                 },
                 child: Text(
-                  _isSignUp 
+                  _isSignUp
                       ? 'Already have an account? Sign in'
                       : 'Don\'t have an account? Create one',
                   style: const TextStyle(color: Colors.green),
                 ),
               ),
-              
+
               const Spacer(),
-              
+
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, false); // Return without auth
