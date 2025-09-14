@@ -62,7 +62,7 @@ Important Rules:
 - The "title" should be concise and descriptive (under 10 words)
 - The "description" should be 1-2 short sentences explaining what environmental issue you observe; only express facts in the image, no interpretations or analysis
 - Focus on the PRIMARY or most prominent environmental issue if multiple issues are present
-- The "credibility_score" should reflect how convincing the image evidence is of a real environmental issue: 7-8 for significant pollution with good evidence, 0-2 for no apparent impact, adjust within 0-10 otherwise
+- The "credibility_score" should reflect how convincing the image evidence is of a real environmental issue: 8-10 for significant pollution with good evidence, 0-2 for no apparent impact, adjust within 0-10 according to the scale and scope of the environmental issue. For example basic trash should be low, a large oil spill should be high, and a damanged nature reserve should be in the middle.
 
 Provide your JSON response:
 ''',

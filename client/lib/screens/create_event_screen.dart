@@ -421,6 +421,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<EventCategory>(
                     value: _selectedCategory,
+                    dropdownColor: isDarkMode 
+                        ? darkModeMedium.withValues(alpha: 0.95)
+                        : Colors.white,
                     decoration: InputDecoration(
                       labelText: 'Category *',
                       labelStyle: TextStyle(
@@ -912,15 +915,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         end: Alignment.bottomRight,
                         colors: _isSubmitting
                             ? [
-                                (isDarkMode ? darkModeMedium : lightModeMedium)
-                                    .withValues(alpha: 0.5),
-                                (isDarkMode ? darkModeMedium : lightModeMedium)
-                                    .withValues(alpha: 0.5),
-                              ]
-                            : [
-                                isDarkMode ? lightModeMedium : lightModeMedium,
-                                isDarkMode ? lightModeDark : lightModeDark,
-                              ],
+                              (isDarkMode ? darkModeMedium : lightModeDark)
+                                  .withValues(alpha: 0.5),
+                              (isDarkMode ? darkModeMedium : lightModeDark)
+                                  .withValues(alpha: 0.5),
+                            ]
+                          : [
+                              isDarkMode ? darkModeMedium : lightModeDark,
+                              isDarkMode
+                                  ? darkModeDark
+                                  : lightModeDark.withValues(alpha: 0.8),
+                            ],
                       ),
                       borderRadius: BorderRadius.circular(
                         kFloatingButtonBorderRadius,
@@ -976,7 +981,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       case EventCategory.education:
         return 'Education';
       case EventCategory.other:
-        return 'Other';
+        return 'Volunteering';
     }
   }
 

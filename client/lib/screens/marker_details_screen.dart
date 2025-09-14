@@ -781,7 +781,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [lightModeMedium, lightModeDark],
+              colors: isDarkMode 
+                  ? [darkModeMedium, darkModeDark]
+                  : [lightModeMedium, lightModeDark],
             ),
             borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
           ),
@@ -1697,7 +1699,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                         ? darkModeMedium
                                         : lightModeDark)
                                   : (isDarkMode
-                                        ? lightModeMedium
+                                        ? darkModeMedium
                                         : lightModeMedium),
                               borderRadius: BorderRadius.circular(
                                 kFloatingButtonBorderRadius,
@@ -1716,7 +1718,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                 onTap: () => Navigator.pop(context),
                                 child: Icon(
                                   Icons.arrow_back_rounded,
-                                  color: isDarkMode ? highlight : Colors.white,
+                                  color: widget.marker.type == MarkerType.issue
+                                      ? (isDarkMode ? highlight : Colors.white)
+                                      : (isDarkMode ? highlight : Colors.white),
                                   size: kFloatingButtonIconSize,
                                 ),
                               ),
