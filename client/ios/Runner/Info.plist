@@ -32,6 +32,16 @@
 	<string>This app uses the camera to take photos of environmental issues and community events for reporting and documentation purposes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app accesses the photo library to select images for environmental issues and community events.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app uses location to show your current position on the map and help you report environmental issues and events at your location.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app uses location to show your current position on the map and help you report environmental issues and events at your location.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app uses location to show your current position on the map and help you report environmental issues and events at your location.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

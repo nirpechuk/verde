@@ -24,8 +24,8 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   LatLng _currentLocation = const LatLng(
-    42.3601,
-    -71.0589,
+    42.35857,
+    -71.09635,
   ); // Default to Boston/MIT area
   List<AppMarker> _markers = [];
   List<Event> _events = [];
@@ -67,18 +67,58 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  Future<bool> _isEnabled() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the 
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale 
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately. 
+      return Future.error(
+        'Location permissions are permanently denied, we cannot request permissions.');
+    } 
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return true;
+  }
+
   Future<void> _getCurrentLocation() async {
     try {
-      final permission = await Permission.location.request();
-      if (permission.isGranted) {
+      bool working = await _isEnabled();
+
+      try {
         final position = await Geolocator.getCurrentPosition();
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
         });
+      } catch (e) {
+        // Use default location if permission denied or error
+        print('Location error: $e');
       }
     } catch (e) {
-      // Use default location if permission denied or error
-      print('Location error: $e');
+      print('Error checking location services or permissions: $e');
     }
   }
 
@@ -218,46 +258,6 @@ class _MapScreenState extends State<MapScreen> {
 
   List<Marker> _buildFlutterMapMarkers() {
     List<Marker> mapMarkers = [];
-
-    // Add current location marker first (so it appears behind other markers)
-    mapMarkers.add(
-      Marker(
-        point: _currentLocation,
-        width: 40,
-        height: 40,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer pulse ring
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-            ),
-            // Inner location dot
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
 
     // Add issue markers with red outline based on credibility
     // Red outline alpha is based on both vote score and credibility score
@@ -426,6 +426,46 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
     }
+
+    // Add current location marker last (so it appears above other markers)
+    mapMarkers.add(
+      Marker(
+        point: _currentLocation,
+        width: 40,
+        height: 40,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer pulse ring
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+            ),
+            // Inner location dot
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
     return mapMarkers;
   }
