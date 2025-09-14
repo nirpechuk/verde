@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:client/helpers/fab.dart';
 import 'package:client/helpers/utils.dart';
 import '../models/marker.dart';
@@ -31,6 +32,11 @@ class _MapScreenState extends State<MapScreen> {
   bool _isLoading = true;
   int _userPoints = 0;
   bool _isDarkMode = false;
+  
+  // Realtime subscriptions
+  RealtimeChannel? _markersChannel;
+  RealtimeChannel? _eventsChannel;
+  RealtimeChannel? _issuesChannel;
 
   @override
   void initState() {
@@ -38,10 +44,20 @@ class _MapScreenState extends State<MapScreen> {
     _initializeMap();
   }
 
+  @override
+  void dispose() {
+    // Clean up realtime subscriptions
+    _markersChannel?.unsubscribe();
+    _eventsChannel?.unsubscribe();
+    _issuesChannel?.unsubscribe();
+    super.dispose();
+  }
+
   Future<void> _initializeMap() async {
     await _getCurrentLocation();
     await _loadUserData();
     await _loadMapData();
+    _setupRealtimeSubscriptions();
     setState(() {
       _isLoading = false;
     });
@@ -79,6 +95,52 @@ class _MapScreenState extends State<MapScreen> {
     } catch (e) {
       print('Error loading user data: $e');
     }
+  }
+
+  void _setupRealtimeSubscriptions() {
+    final client = Supabase.instance.client;
+    
+    // Subscribe to markers table changes
+    _markersChannel = client
+        .channel('markers_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'markers',
+          callback: (payload) {
+            print('Markers change detected: ${payload.eventType}');
+            _loadMapData(); // Refresh map data when markers change
+          },
+        )
+        .subscribe();
+
+    // Subscribe to events table changes
+    _eventsChannel = client
+        .channel('events_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'events',
+          callback: (payload) {
+            print('Events change detected: ${payload.eventType}');
+            _loadMapData(); // Refresh map data when events change
+          },
+        )
+        .subscribe();
+
+    // Subscribe to issues table changes
+    _issuesChannel = client
+        .channel('issues_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'issues',
+          callback: (payload) {
+            print('Issues change detected: ${payload.eventType}');
+            _loadMapData(); // Refresh map data when issues change
+          },
+        )
+        .subscribe();
   }
 
   Future<void> _loadMapData() async {
