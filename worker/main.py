@@ -27,15 +27,13 @@ def main():
 
         # Example: Create a sample user through authentication (if not exists)
         sample_email = "sample@example.com"
-        
+
         # Check if user exists by email
         existing_user = SupabaseService.get_user_by_email(sample_email)
         if not existing_user:
             # Create sample user through Supabase Auth
             auth_result = SupabaseService.signup_user(
-                email=sample_email,
-                password="samplepassword123",
-                username="sample_user"
+                email=sample_email, password="samplepassword123", username="sample_user"
             )
             if auth_result:
                 print("Created sample user through authentication")
@@ -70,11 +68,11 @@ def main():
                 user_id=user_id,
                 action_type="report_issue",
                 points=10,
-                reference_id=None
+                reference_id=None,
             )
             if success:
                 print(f"Awarded 10 points to user {user_id}")
-            
+
             # Check points history
             points_history = SupabaseService.get_user_points_history(user_id, limit=5)
             print(f"User has {len(points_history)} point transactions")

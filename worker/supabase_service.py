@@ -1,6 +1,14 @@
 from typing import List, Optional
 from supabase_client import supabase
-from models import User, AppMarker, Issue, Event, IssueVote, EventRSVP, UserPointsHistory
+from models import (
+    User,
+    AppMarker,
+    Issue,
+    Event,
+    IssueVote,
+    EventRSVP,
+    UserPointsHistory,
+)
 
 
 class SupabaseService:
@@ -140,7 +148,12 @@ class SupabaseService:
     @staticmethod
     def get_issue_votes(issue_id: str) -> List[IssueVote]:
         try:
-            response = supabase.table("issue_votes").select("*").eq("issue_id", issue_id).execute()
+            response = (
+                supabase.table("issue_votes")
+                .select("*")
+                .eq("issue_id", issue_id)
+                .execute()
+            )
             return [IssueVote(**item) for item in response.data]
         except Exception as e:
             print(f"Error fetching issue votes: {e}")
@@ -165,14 +178,12 @@ class SupabaseService:
             return None
 
     @staticmethod
-    def update_issue_vote(user_id: str, issue_id: str, vote_value: int) -> Optional[IssueVote]:
+    def update_issue_vote(
+        user_id: str, issue_id: str, vote_value: int
+    ) -> Optional[IssueVote]:
         try:
             # Use upsert to handle existing votes
-            data = {
-                "user_id": user_id,
-                "issue_id": issue_id,
-                "vote": vote_value
-            }
+            data = {"user_id": user_id, "issue_id": issue_id, "vote": vote_value}
             response = supabase.table("issue_votes").upsert(data).execute()
             if response.data:
                 return IssueVote(**response.data[0])
@@ -185,7 +196,12 @@ class SupabaseService:
     @staticmethod
     def get_event_rsvps(event_id: str) -> List[EventRSVP]:
         try:
-            response = supabase.table("event_rsvps").select("*").eq("event_id", event_id).execute()
+            response = (
+                supabase.table("event_rsvps")
+                .select("*")
+                .eq("event_id", event_id)
+                .execute()
+            )
             return [EventRSVP(**item) for item in response.data]
         except Exception as e:
             print(f"Error fetching event RSVPs: {e}")
@@ -212,14 +228,12 @@ class SupabaseService:
             return None
 
     @staticmethod
-    def update_event_rsvp(user_id: str, event_id: str, status: str) -> Optional[EventRSVP]:
+    def update_event_rsvp(
+        user_id: str, event_id: str, status: str
+    ) -> Optional[EventRSVP]:
         try:
             # Use upsert to handle existing RSVPs
-            data = {
-                "user_id": user_id,
-                "event_id": event_id,
-                "status": status
-            }
+            data = {"user_id": user_id, "event_id": event_id, "status": status}
             response = supabase.table("event_rsvps").upsert(data).execute()
             if response.data:
                 return EventRSVP(**response.data[0])
@@ -230,9 +244,17 @@ class SupabaseService:
 
     # User points history operations
     @staticmethod
-    def get_user_points_history(user_id: str, limit: int = 100) -> List[UserPointsHistory]:
+    def get_user_points_history(
+        user_id: str, limit: int = 100
+    ) -> List[UserPointsHistory]:
         try:
-            response = supabase.table("user_points_history").select("*").eq("user_id", user_id).limit(limit).execute()
+            response = (
+                supabase.table("user_points_history")
+                .select("*")
+                .eq("user_id", user_id)
+                .limit(limit)
+                .execute()
+            )
             return [UserPointsHistory(**item) for item in response.data]
         except Exception as e:
             print(f"Error fetching user points history: {e}")
@@ -240,29 +262,39 @@ class SupabaseService:
 
     # Helper functions for common operations
     @staticmethod
-    def award_points(user_id: str, action_type: str, points: int, reference_id: str = None) -> bool:
+    def award_points(
+        user_id: str, action_type: str, points: int, reference_id: str = None
+    ) -> bool:
         try:
             # Call the PostgreSQL function
-            response = supabase.rpc('award_points', {
-                'p_user_id': user_id,
-                'p_action_type': action_type,
-                'p_points': points,
-                'p_reference_id': reference_id
-            }).execute()
+            response = supabase.rpc(
+                "award_points",
+                {
+                    "p_user_id": user_id,
+                    "p_action_type": action_type,
+                    "p_points": points,
+                    "p_reference_id": reference_id,
+                },
+            ).execute()
             return True
         except Exception as e:
             print(f"Error awarding points: {e}")
             return False
 
     @staticmethod
-    def get_markers_near_location(latitude: float, longitude: float, radius_meters: int = 1000, limit: int = 100) -> List[AppMarker]:
+    def get_markers_near_location(
+        latitude: float, longitude: float, radius_meters: int = 1000, limit: int = 100
+    ) -> List[AppMarker]:
         try:
             # Use PostGIS to find markers within radius
-            response = supabase.rpc('get_markers_near_point', {
-                'lat': latitude,
-                'lng': longitude,
-                'radius': radius_meters
-            }).limit(limit).execute()
+            response = (
+                supabase.rpc(
+                    "get_markers_near_point",
+                    {"lat": latitude, "lng": longitude, "radius": radius_meters},
+                )
+                .limit(limit)
+                .execute()
+            )
             return [AppMarker(**item) for item in response.data]
         except Exception as e:
             print(f"Error fetching nearby markers: {e}")
@@ -286,23 +318,18 @@ class SupabaseService:
         """Create a user through Supabase Auth, which will trigger user table creation via triggers"""
         try:
             # Sign up through Supabase Auth
-            response = supabase.auth.sign_up({
-                "email": email,
-                "password": password,
-                "options": {
-                    "data": {
-                        "username": username
-                    }
+            response = supabase.auth.sign_up(
+                {
+                    "email": email,
+                    "password": password,
+                    "options": {"data": {"username": username}},
                 }
-            })
-            
+            )
+
             if response.user:
                 print(f"User created in auth system with ID: {response.user.id}")
                 # The user table entry should be created automatically via triggers
-                return {
-                    "user": response.user,
-                    "session": response.session
-                }
+                return {"user": response.user, "session": response.session}
             return None
         except Exception as e:
             print(f"Error signing up user: {e}")
@@ -312,16 +339,12 @@ class SupabaseService:
     def signin_user(email: str, password: str) -> Optional[dict]:
         """Sign in a user through Supabase Auth"""
         try:
-            response = supabase.auth.sign_in_with_password({
-                "email": email,
-                "password": password
-            })
-            
+            response = supabase.auth.sign_in_with_password(
+                {"email": email, "password": password}
+            )
+
             if response.user:
-                return {
-                    "user": response.user,
-                    "session": response.session
-                }
+                return {"user": response.user, "session": response.session}
             return None
         except Exception as e:
             print(f"Error signing in user: {e}")
