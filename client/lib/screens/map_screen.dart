@@ -75,7 +75,7 @@ class _MapScreenState extends State<MapScreen> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Location services are not enabled don't continue
-      // accessing the position and request users of the 
+      // accessing the position and request users of the
       // App to enable the location services.
       return Future.error('Location services are disabled.');
     }
@@ -86,18 +86,19 @@ class _MapScreenState extends State<MapScreen> {
       if (permission == LocationPermission.denied) {
         // Permissions are denied, next time you could try
         // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale 
+        // Android's shouldShowRequestPermissionRationale
         // returned true. According to Android guidelines
         // your App should show an explanatory UI now.
         return Future.error('Location permissions are denied');
       }
     }
-    
+
     if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately. 
+      // Permissions are denied forever, handle appropriately.
       return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.');
-    } 
+        'Location permissions are permanently denied, we cannot request permissions.',
+      );
+    }
 
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
@@ -110,24 +111,28 @@ class _MapScreenState extends State<MapScreen> {
 
       try {
         final position = await Geolocator.getCurrentPosition();
-        final double bostonLat = 42.35857;
-        final double bostonLng = -71.09635;
-        final double distanceThreshold = 1;
-        final double distance = Geolocator.distanceBetween(
-          _currentLocation.latitude,
-          _currentLocation.longitude,
-          position.latitude,
-          position.longitude,
-        );
-        if (distance < distanceThreshold) {
-          setState(() {
-            _currentLocation = LatLng(position.latitude, position.longitude);
-          });
-        } else {
-          setState(() {
-            _currentLocation = LatLng(bostonLat, bostonLng);
-          });
-        }
+        // final double bostonLat = 42.35857;
+        // final double bostonLng = -71.09635;
+        // final double distanceThreshold = 1;
+        // final double distance = Geolocator.distanceBetween(
+        //   _currentLocation.latitude,
+        //   _currentLocation.longitude,
+        //   position.latitude,
+        //   position.longitude,
+        // );
+        // if (distance < distanceThreshold) {
+        //   setState(() {
+        //     _currentLocation = LatLng(position.latitude, position.longitude);
+        //   });
+        // } else {
+        //   setState(() {
+        //     _currentLocation = LatLng(bostonLat, bostonLng);
+        //   });
+        // }
+
+        setState(() {
+          _currentLocation = LatLng(position.latitude, position.longitude);
+        });
       } catch (e) {
         // Use default location if permission denied or error
         print('Location error: $e');
@@ -301,7 +306,7 @@ class _MapScreenState extends State<MapScreen> {
       final isActive = event.isActive;
       final baseColor = _isDarkMode ? darkModeMedium : lightModeMedium;
       final accentColor = _isDarkMode ? highlight : highlight;
-      
+
       // Calculate outline effect based on event timing
       final outlineEffect = _calculateEventOutlineEffect(event);
       final outlineColor = outlineEffect['color'] as Color;
@@ -319,45 +324,45 @@ class _MapScreenState extends State<MapScreen> {
               children: [
                 // Main marker container
                 Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isActive
-                      ? [accentColor, accentColor.withValues(alpha: 0.8)]
-                      : [baseColor, baseColor.withValues(alpha: 0.8)],
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isActive
-                      ? (_isDarkMode ? highlight : lightModeDark)
-                      : (_isDarkMode ? highlight : Colors.white),
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                    spreadRadius: 1,
-                  ),
-                  BoxShadow(
-                    color: (isActive ? accentColor : baseColor).withValues(
-                      alpha: 0.3,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isActive
+                          ? [accentColor, accentColor.withValues(alpha: 0.8)]
+                          : [baseColor, baseColor.withValues(alpha: 0.8)],
                     ),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                  // Add a subtle glow for active events
-                  if (isActive)
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 0),
-                      spreadRadius: 2,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isActive
+                          ? (_isDarkMode ? highlight : lightModeDark)
+                          : (_isDarkMode ? highlight : Colors.white),
+                      width: 2.5,
                     ),
-                ],
-              ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                        spreadRadius: 1,
+                      ),
+                      BoxShadow(
+                        color: (isActive ? accentColor : baseColor).withValues(
+                          alpha: 0.3,
+                        ),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                      // Add a subtle glow for active events
+                      if (isActive)
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 0),
+                          spreadRadius: 2,
+                        ),
+                    ],
+                  ),
                   alignment: Alignment.center,
                   child: Icon(
                     isActive ? Icons.flash_on_rounded : Icons.event_rounded,
@@ -387,15 +392,18 @@ class _MapScreenState extends State<MapScreen> {
       );
     }
 
-
     // Add issue markers with red outline based on credibility
     // Red outline alpha is based on both vote score and credibility score
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
       // Get vote statistics and credibility for this marker
-      final voteStats = _markerVoteStats[marker.id] ?? {'score': 0, 'credibility': 0};
+      final voteStats =
+          _markerVoteStats[marker.id] ?? {'score': 0, 'credibility': 0};
       final voteScore = voteStats['score'] ?? 0;
       final credibilityScore = voteStats['credibility'] ?? 0;
-      final redOutlineAlpha = _calculateRedOutlineAlpha(voteScore, credibilityScore);
+      final redOutlineAlpha = _calculateRedOutlineAlpha(
+        voteScore,
+        credibilityScore,
+      );
 
       mapMarkers.add(
         Marker(
@@ -537,24 +545,24 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-
   double _calculateRedOutlineAlpha(int voteScore, int credibilityScore) {
     // Calculate alpha for red outline based on both vote score and credibility
     // Higher scores = more visible red outline (higher alpha)
     // Range: 0.0 (low scores) to 0.8 (high scores)
-    
+
     // Normalize vote score (typically ranges from -10 to +10)
     final normalizedVoteScore = (voteScore + 5) / 10.0; // 0.0 to 1.0
-    
+
     // Normalize credibility score (ranges from 0 to 10)
     final normalizedCredibilityScore = credibilityScore / 10.0; // 0.0 to 1.0
-    
+
     // Average the two scores (higher = more credible/well-voted)
-    final averageScore = (normalizedVoteScore + normalizedCredibilityScore) / 2.0;
-    
+    final averageScore =
+        (normalizedVoteScore + normalizedCredibilityScore) / 2.0;
+
     // Higher scores give higher alpha (more visible red outline)
     final outlineAlpha = averageScore * 0.8;
-    
+
     return outlineAlpha.clamp(0.0, 0.8);
   }
 
@@ -562,62 +570,49 @@ class _MapScreenState extends State<MapScreen> {
     final now = DateTime.now();
     final startTime = event.startTime;
     final endTime = event.endTime;
-    
+
     // Check if event is currently happening
     if (now.isAfter(startTime) && now.isBefore(endTime)) {
       // Calculate time pulse phase (0.0 - 1.0)
-      final pulsePhase = (now.microsecond / Duration.microsecondsPerMillisecond) % 1000 / 1000;
-      final pulseAlpha = pulsePhase < 0.5 ? pulsePhase * 2 : 1 - (pulsePhase - 0.5) * 2;
-      
+      final pulsePhase =
+          (now.microsecond / Duration.microsecondsPerMillisecond) % 1000 / 1000;
+      final pulseAlpha = pulsePhase < 0.5
+          ? pulsePhase * 2
+          : 1 - (pulsePhase - 0.5) * 2;
+
       return {
         'color': Colors.yellow,
         'alpha': pulseAlpha,
-        'description': 'currently_occurring'
+        'description': 'currently_occurring',
       };
     }
-    
+
     // Calculate time until event starts (in hours)
     final hoursUntilStart = startTime.difference(now).inHours;
     final hoursAfterEnd = now.difference(endTime).inHours;
-    
-    
+
     // Event is in the future
     if (hoursUntilStart <= 1) {
       // Very soon (within 1 hour) - bright yellow
-      return {
-        'color': Colors.orange,
-        'alpha': 0.7,
-        'description': 'very_soon'
-      };
+      return {'color': Colors.orange, 'alpha': 0.7, 'description': 'very_soon'};
     } else if (hoursUntilStart <= 6) {
       // Soon (within 6 hours) - orange
-      return {
-        'color': Colors.orange,
-        'alpha': 0.6,
-        'description': 'soon'
-      };
+      return {'color': Colors.orange, 'alpha': 0.6, 'description': 'soon'};
     } else if (hoursUntilStart <= 24) {
       // Today (within 24 hours) - light orange
-      return {
-        'color': Colors.orange,
-        'alpha': 0.5,
-        'description': 'today'
-      };
-    } else if (hoursUntilStart <= 168) { // 7 days
+      return {'color': Colors.orange, 'alpha': 0.5, 'description': 'today'};
+    } else if (hoursUntilStart <= 168) {
+      // 7 days
       // This week - yellow with increasing intensity
-      final intensity = 0.5 * ((hoursUntilStart - 24)/ 144.0).clamp(0.0, 1);
+      final intensity = 0.5 * ((hoursUntilStart - 24) / 144.0).clamp(0.0, 1);
       return {
         'color': Colors.orange,
         'alpha': intensity,
-        'description': 'this_week'
+        'description': 'this_week',
       };
     } else {
       // Too far out - minimal white glow
-      return {
-        'color': Colors.white,
-        'alpha': 0.1,
-        'description': 'far_future'
-      };
+      return {'color': Colors.white, 'alpha': 0.1, 'description': 'far_future'};
     }
   }
 
@@ -626,8 +621,10 @@ class _MapScreenState extends State<MapScreen> {
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              AuthScreen(actionContext: 'to report an issue', isDarkMode: _isDarkMode),
+          builder: (context) => AuthScreen(
+            actionContext: 'to report an issue',
+            isDarkMode: _isDarkMode,
+          ),
         ),
       );
 
@@ -654,8 +651,10 @@ class _MapScreenState extends State<MapScreen> {
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              AuthScreen(actionContext: 'to create an event', isDarkMode: _isDarkMode),
+          builder: (context) => AuthScreen(
+            actionContext: 'to create an event',
+            isDarkMode: _isDarkMode,
+          ),
         ),
       );
 
@@ -813,8 +812,9 @@ class _MapScreenState extends State<MapScreen> {
                                 offset: const Offset(0, 8),
                               ),
                               BoxShadow(
-                                color: (_isDarkMode ? highlight : lightModeMedium)
-                                    .withValues(alpha: 0.1),
+                                color:
+                                    (_isDarkMode ? highlight : lightModeMedium)
+                                        .withValues(alpha: 0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 0),
                               ),
