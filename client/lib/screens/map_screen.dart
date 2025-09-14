@@ -542,7 +542,7 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
 
-                // Dark mode toggle button - top left
+                // Dark mode toggle button - top left (glass style)
                 Positioned(
                   top:
                       MediaQuery.of(context).padding.top +
@@ -552,11 +552,31 @@ class _MapScreenState extends State<MapScreen> {
                     width: kFloatingButtonSize,
                     height: kFloatingButtonSize,
                     decoration: BoxDecoration(
-                      color: _isDarkMode ? darkModeMedium : lightModeDark,
+                      color: _isDarkMode
+                          ? highlight.withValues(alpha: 0.1)
+                          : lightModeDark.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(
                         kFloatingButtonBorderRadius,
                       ),
-                      boxShadow: kFloatingButtonShadow,
+                      border: Border.all(
+                        color: _isDarkMode
+                            ? highlight.withValues(alpha: 0.3)
+                            : lightModeDark.withValues(alpha: 0.9),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: (_isDarkMode ? highlight : lightModeDark)
+                              .withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 0),
+                        ),
+                      ],
                     ),
                     child: Material(
                       color: Colors.transparent,
@@ -574,7 +594,7 @@ class _MapScreenState extends State<MapScreen> {
                           alignment: Alignment.center,
                           child: Icon(
                             _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                            color: highlight,
+                            color: _isDarkMode ? highlight : lightModeDark,
                             size: kFloatingButtonIconSize,
                           ),
                         ),
@@ -583,7 +603,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ),
 
-                // User info and account - top right
+                // User info and account - top right (glass style)
                 Positioned(
                   top:
                       MediaQuery.of(context).padding.top +
@@ -602,12 +622,30 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: _isDarkMode
-                                ? darkModeDark.withValues(alpha: 0.95)
-                                : lightModeMedium.withValues(alpha: 0.95),
+                                ? highlight.withValues(alpha: 0.1)
+                                : lightModeDark.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(
                               kFloatingButtonBorderRadius,
                             ),
-                            boxShadow: kFloatingButtonShadow,
+                            border: Border.all(
+                              color: _isDarkMode
+                                  ? highlight.withValues(alpha: 0.3)
+                                  : lightModeDark.withValues(alpha: 0.9),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: (_isDarkMode ? highlight : lightModeDark)
+                                    .withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 0),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -615,7 +653,7 @@ class _MapScreenState extends State<MapScreen> {
                               Icon(
                                 Icons.stars,
                                 size: kFloatingButtonIconSize - 4,
-                                color: _isDarkMode ? darkModeMedium : highlight,
+                                color: _isDarkMode ? highlight : lightModeDark,
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -624,8 +662,8 @@ class _MapScreenState extends State<MapScreen> {
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                   color: _isDarkMode
-                                      ? darkModeMedium
-                                      : highlight,
+                                      ? highlight
+                                      : lightModeDark,
                                 ),
                               ),
                             ],
@@ -640,20 +678,38 @@ class _MapScreenState extends State<MapScreen> {
                         height: kFloatingButtonSize,
                         decoration: BoxDecoration(
                           color: _isDarkMode
-                              ? darkModeDark.withValues(alpha: 0.95)
-                              : lightModeMedium.withValues(alpha: 0.95),
+                              ? highlight.withValues(alpha: 0.1)
+                              : lightModeDark.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(
                             kFloatingButtonBorderRadius,
                           ),
-                          boxShadow: kFloatingButtonShadow,
+                          border: Border.all(
+                            color: _isDarkMode
+                                ? highlight.withValues(alpha: 0.3)
+                                : lightModeDark.withValues(alpha: 0.9),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                            BoxShadow(
+                              color: (_isDarkMode ? highlight : lightModeDark)
+                                  .withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
                         ),
                         child: SupabaseService.isAuthenticated
                             ? PopupMenuButton<String>(
                                 icon: Icon(
                                   Icons.account_circle,
                                   color: _isDarkMode
-                                      ? darkModeMedium
-                                      : highlight,
+                                      ? highlight
+                                      : lightModeDark,
                                   size: kFloatingButtonIconSize + 4,
                                 ),
                                 onSelected: (value) async {
@@ -720,7 +776,7 @@ class _MapScreenState extends State<MapScreen> {
                                     child: Icon(
                                       Icons.login,
                                       color: _isDarkMode
-                                          ? darkModeMedium
+                                          ? highlight
                                           : lightModeDark,
                                       size: kFloatingButtonIconSize + 4,
                                     ),
@@ -738,19 +794,22 @@ class _MapScreenState extends State<MapScreen> {
         children: [
           ExpandableFab(
             distance: kFabButtonSpacing,
-            backgroundColor: _isDarkMode ? highlight : lightModeMedium,
-            iconColor: _isDarkMode ? darkModeDark : highlight,
+            backgroundColor: _isDarkMode ? highlight : lightModeDark,
+            iconColor: _isDarkMode ? highlight : lightModeDark,
+            isDarkMode: _isDarkMode,
             children: [
               ActionButton(
                 onPressed: _onCreateEvent,
                 backgroundColor: _isDarkMode ? highlight : lightModeMedium,
-                iconColor: _isDarkMode ? darkModeDark : lightModeDark,
+                iconColor: _isDarkMode ? highlight : lightModeDark,
+                isDarkMode: _isDarkMode,
                 icon: const Icon(Icons.location_pin),
               ),
               ActionButton(
                 onPressed: _onReportIssue,
                 backgroundColor: _isDarkMode ? highlight : lightModeMedium,
-                iconColor: _isDarkMode ? darkModeDark : lightModeDark,
+                iconColor: _isDarkMode ? highlight : lightModeDark,
+                isDarkMode: _isDarkMode,
                 icon: const Icon(Icons.add_alert),
               ),
             ],

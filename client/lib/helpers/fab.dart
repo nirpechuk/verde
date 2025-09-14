@@ -11,6 +11,7 @@ class ExpandableFab extends StatefulWidget {
     required this.children,
     this.backgroundColor,
     this.iconColor,
+    this.isDarkMode = false,
   });
 
   final bool? initialOpen;
@@ -18,6 +19,7 @@ class ExpandableFab extends StatefulWidget {
   final List<Widget> children;
   final Color? backgroundColor;
   final Color? iconColor;
+  final bool isDarkMode;
 
   @override
   State<ExpandableFab> createState() => _ExpandableFabState();
@@ -82,9 +84,28 @@ class _ExpandableFabState extends State<ExpandableFab>
       width: kMainFabSize,
       height: kMainFabSize,
       decoration: BoxDecoration(
-        color: widget.iconColor,
+        color: widget.isDarkMode 
+            ? highlight.withValues(alpha: 0.1)
+            : lightModeDark.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(kMainFabBorderRadius),
-        boxShadow: kFloatingButtonShadow,
+        border: Border.all(
+          color: widget.isDarkMode 
+              ? highlight.withValues(alpha: 0.3)
+              : lightModeDark.withValues(alpha: 0.9),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: (widget.isDarkMode ? highlight : lightModeDark).withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 0),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -127,9 +148,28 @@ class _ExpandableFabState extends State<ExpandableFab>
             width: kMainFabSize,
             height: kMainFabSize,
             decoration: BoxDecoration(
-              color: widget.backgroundColor,
+              color: widget.isDarkMode 
+                  ? highlight.withValues(alpha: 0.1)
+                  : lightModeDark.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(kMainFabBorderRadius),
-              boxShadow: kFloatingButtonShadow,
+              border: Border.all(
+                color: widget.isDarkMode 
+                    ? highlight.withValues(alpha: 0.3)
+                    : lightModeDark.withValues(alpha: 0.9),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: (widget.isDarkMode ? highlight : lightModeDark).withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 0),
+                ),
+              ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -230,6 +270,7 @@ class ActionButton extends StatelessWidget {
     required this.backgroundColor,
     required this.iconColor,
     this.iconSize,
+    this.isDarkMode = false,
   });
 
   final VoidCallback? onPressed;
@@ -237,6 +278,7 @@ class ActionButton extends StatelessWidget {
   final Color? backgroundColor;
   final Color? iconColor;
   final double? iconSize;
+  final bool isDarkMode;
 
   @override
   Widget build(BuildContext context) {
@@ -244,9 +286,28 @@ class ActionButton extends StatelessWidget {
       width: kFloatingButtonSize,
       height: kFloatingButtonSize,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: isDarkMode 
+            ? highlight.withValues(alpha: 0.1)
+            : lightModeDark.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-        boxShadow: kFloatingButtonShadow,
+        border: Border.all(
+          color: isDarkMode 
+              ? highlight.withValues(alpha: 0.3)
+              : lightModeDark.withValues(alpha: 0.9),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: (isDarkMode ? highlight : lightModeDark).withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 0),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,

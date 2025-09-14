@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 // Color Constants
 const Color highlight = Color(0xFFF0EAD2);
-const Color lightModeMedium = Color.fromARGB(255, 143, 162, 94);
-const Color lightModeDark = Color.fromARGB(255, 79, 89, 52);
+const Color lightModeMedium = Color.fromARGB(255, 52, 125, 0);
+const Color lightModeDark = Color(0xFF143601);
 const Color darkModeMedium = Color(0xFFA98467);
 const Color darkModeDark = Color(0xFF6C584C);
 
@@ -11,7 +11,7 @@ const double kFabButtonSpacing = 13.0;
 const kIconSize = 50.0;
 
 // Unified Design System Constants
-const double kFloatingButtonSize = 56.0;
+const double kFloatingButtonSize = 67.0;
 const double kMainFabSize = 84.0; // 1.5x the size of other buttons
 const double kFloatingButtonBorderRadius = 28.0;
 const double kMainFabBorderRadius = 42.0; // Maintains circular shape
