@@ -29,8 +29,9 @@ class _MapScreenState extends State<MapScreen> {
   ); // Default to Boston/MIT area
   List<AppMarker> _markers = [];
   List<Event> _events = [];
-  Map<String, Map<String, int>> _markerVoteStats =
-      {}; // Store vote stats for each marker
+  // Store vote statistics for each issue marker to determine alpha transparency
+  // Map structure: markerId -> {upvotes: int, downvotes: int, total: int, score: int}
+  Map<String, Map<String, int>> _markerVoteStats = {};
   bool _isLoading = true;
   int _userPoints = 0;
   bool _isDarkMode = false;
@@ -255,6 +256,7 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     // Add issue markers with aesthetic colors - these will appear on top
+    // Alpha transparency is applied based on vote score for visual credibility indication
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
       // Get vote statistics for this marker to determine alpha
       final voteStats = _markerVoteStats[marker.id] ?? {'score': 0};
