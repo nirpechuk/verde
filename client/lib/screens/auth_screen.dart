@@ -43,7 +43,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Account created and signed in successfully!'),
-              backgroundColor: Colors.green,
+              backgroundColor: lightModeMedium,
             ),
           );
           Navigator.pop(context, true); // Return success
@@ -58,7 +58,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Signed in successfully!'),
-              backgroundColor: Colors.green,
+              backgroundColor: lightModeMedium,
             ),
           );
           Navigator.pop(context, true); // Return success
@@ -135,41 +135,20 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
                     ],
 
                     // App branding
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: widget.isDarkMode ? highlight : lightModeMedium,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.eco,
-                              size: 48,
-                              color: widget.isDarkMode ? darkModeDark : Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'EcoAction',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: widget.isDarkMode ? highlight : lightModeMedium,
-                            ),
+                    Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Image.asset(
+                            'lib/images/combinedlogoname.png',
+                            height: 240,
+                            fit: BoxFit.contain,
                           ),
                         ],
-                      ),
                     ),
-
-                    const SizedBox(height: 32),
-
+                    const SizedBox(height: 24),
                     TextFormField(
                       controller: _emailController,
                       style: TextStyle(
