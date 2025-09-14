@@ -296,8 +296,8 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                   : Icons.thumb_down,
                               size: 16,
                               color: _voteStats['score']! >= 0
-                                  ? Colors.green
-                                  : Colors.red,
+                                  ? lightModeMedium
+                                  : lightModeNegative,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -305,8 +305,8 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: _voteStats['score']! >= 0
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? lightModeMedium
+                                    : lightModeNegative,
                               ),
                             ),
                           ],
@@ -439,11 +439,11 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (_userVote == 1 ? Colors.green : Colors.red)
+                      color: (_userVote == 1 ? lightModeMedium : lightModeNegative)
                           .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: (_userVote == 1 ? Colors.green : Colors.red)
+                        color: (_userVote == 1 ? lightModeMedium : lightModeNegative)
                             .withOpacity(0.3),
                       ),
                     ),
@@ -451,13 +451,13 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                       children: [
                         Icon(
                           _userVote == 1 ? Icons.thumb_up : Icons.thumb_down,
-                          color: _userVote == 1 ? Colors.green : Colors.red,
+                          color: _userVote == 1 ? lightModeMedium : lightModeNegative,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'You voted: ${_userVote == 1 ? 'Credible' : 'Not Credible'}',
                           style: TextStyle(
-                            color: _userVote == 1 ? Colors.green : Colors.red,
+                            color: _userVote == 1 ? lightModeMedium : lightModeNegative,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -472,7 +472,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   const SizedBox(height: 8),
                 ],
 
-                // Voting buttons
+                // Voting buttons with contrasting colors
                 Row(
                   children: [
                     Expanded(
@@ -551,12 +551,12 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                             end: Alignment.bottomRight,
                             colors: _userVote == -1
                                 ? [
-                                    lightModeDark.withValues(alpha: 0.8),
-                                    lightModeDark.withValues(alpha: 0.8),
+                                    lightModeNegative.withValues(alpha: 0.8),
+                                    lightModeNegative.withValues(alpha: 0.8),
                                   ]
                                 : [
-                                    lightModeDark,
-                                    lightModeDark.withValues(alpha: 0.8),
+                                    lightModeNegative,
+                                    lightModeNegativeDark,
                                   ],
                           ),
                           borderRadius: BorderRadius.circular(24),
@@ -595,7 +595,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                           ? (_userVote == -1
                                                 ? 'Current Vote'
                                                 : 'Not Credible')
-                                          : 'No (+1)',
+                                          : 'No (-1)',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
