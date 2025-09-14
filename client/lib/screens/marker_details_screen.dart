@@ -251,13 +251,26 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
   Widget _buildIssueDetails() {
     if (_issue == null) return const SizedBox();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Card(
+          elevation: 0,
+          color: isDarkMode
+              ? darkModeMedium.withValues(alpha: 0.3)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+            side: BorderSide(
+              color: isDarkMode
+                  ? darkModeMedium
+                  : lightModeMedium.withValues(alpha: 0.3),
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -265,18 +278,30 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 12,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDarkMode
+                              ? [lightModeMedium, lightModeDark]
+                              : [lightModeMedium, lightModeDark],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
                         _issue!.categoryDisplayName,
                         style: const TextStyle(
-                          color: Colors.red,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -330,27 +355,41 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   'Credibility: ${_issue!.credibilityScore}/10',
                   style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   _issue!.title,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: isDarkMode ? highlight : lightModeDark,
                   ),
                 ),
                 if (_issue!.description != null) ...[
-                  const SizedBox(height: 8),
-                  Text(_issue!.description!),
+                  const SizedBox(height: 12),
+                  Text(
+                    _issue!.description!,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                      height: 1.4,
+                    ),
+                  ),
                 ],
                 if (_issue!.imageUrl != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.network(
                         _issue!.imageUrl!,
                         width: double.infinity,
@@ -419,18 +458,93 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
 
-        // Voting action section
+        // Location section
         Card(
+          elevation: 0,
+          color: isDarkMode
+              ? darkModeMedium.withValues(alpha: 0.3)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              kFloatingButtonBorderRadius,
+            ),
+            side: BorderSide(
+              color: isDarkMode
+                  ? darkModeMedium
+                  : lightModeMedium.withValues(alpha: 0.3),
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      color: isDarkMode
+                          ? highlight
+                          : lightModeDark,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Location',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode
+                            ? highlight
+                            : lightModeDark,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _placemark != null
+                      ? _formatAddress(_placemark!)
+                      : 'Loading location...',
+                  style: TextStyle(
+                    color: isDarkMode
+                        ? darkModeMedium
+                        : Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Voting action section
+        Card(
+          elevation: 0,
+          color: isDarkMode
+              ? darkModeMedium.withValues(alpha: 0.3)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+            side: BorderSide(
+              color: isDarkMode
+                  ? darkModeMedium
+                  : lightModeMedium.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
                   _hasVoted ? 'Your Vote' : 'Is this issue credible?',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: isDarkMode ? highlight : lightModeDark,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -619,7 +733,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         ),
 
         // Create fix event button
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         Container(
           width: double.infinity,
           height: kFloatingButtonSize,
@@ -630,7 +744,6 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               colors: [lightModeMedium, lightModeDark],
             ),
             borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
-            boxShadow: kFloatingButtonShadow,
           ),
           child: Material(
             color: Colors.transparent,
@@ -675,8 +788,20 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Card(
+          elevation: 0,
+          color: isDarkMode
+              ? darkModeMedium.withValues(alpha: 0.3)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+            side: BorderSide(
+              color: isDarkMode
+                  ? darkModeMedium
+                  : lightModeMedium.withValues(alpha: 0.3),
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -688,14 +813,24 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [lightModeMedium, lightModeDark],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
                         _event!.categoryDisplayName,
                         style: const TextStyle(
-                          color: Colors.green,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -709,8 +844,19 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.orange,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [highlight, highlight.withValues(alpha: 0.8)],
+                          ),
                           borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: highlight.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Text(
                           'LIVE',
@@ -723,27 +869,41 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   _event!.title,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: isDarkMode ? highlight : lightModeDark,
                   ),
                 ),
                 if (_event!.description != null) ...[
-                  const SizedBox(height: 8),
-                  Text(_event!.description!),
+                  const SizedBox(height: 12),
+                  Text(
+                    _event!.description!,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                      height: 1.4,
+                    ),
+                  ),
                 ],
                 if (_event!.imageUrl != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.network(
                         _event!.imageUrl!,
                         width: double.infinity,
@@ -955,206 +1115,346 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-        ],
-        const SizedBox(height: 16),
-        if (!_event!.isFull) ...[
-          Text(
-            _hasRsvped ? 'Update your RSVP:' : 'Will you attend this event?',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+        ],        
+        // Location section for events
+        Card(
+          elevation: 0,
+          color: isDarkMode
+              ? darkModeMedium.withValues(alpha: 0.3)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              kFloatingButtonBorderRadius,
+            ),
+            side: BorderSide(
+              color: isDarkMode
+                  ? darkModeMedium
+                  : lightModeMedium.withValues(alpha: 0.3),
+            ),
           ),
-          const SizedBox(height: 8),
-          Column(
-            children: [
-              // Going button
-              Container(
-                width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: _rsvpStatus == 'going'
-                        ? [
-                            lightModeMedium.withValues(alpha: 0.8),
-                            lightModeMedium.withValues(alpha: 0.8),
-                          ]
-                        : [lightModeMedium, lightModeDark],
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: _rsvpStatus == 'going'
-                      ? []
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(28),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(28),
-                    onTap: () => _rsvpToEvent('going'),
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _rsvpStatus == 'going'
-                                ? Icons.check_circle_rounded
-                                : Icons.check_circle_outline_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _rsvpStatus == 'going'
-                                ? 'Going!'
-                                : 'Yes, I\'m going! (+5 Points)',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      color: isDarkMode
+                          ? highlight
+                          : lightModeDark,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Location',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode
+                            ? highlight
+                            : lightModeDark,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              // Maybe button
-              Container(
-                width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: _rsvpStatus == 'maybe'
-                        ? [
-                            darkModeMedium.withValues(alpha: 0.8),
-                            darkModeMedium.withValues(alpha: 0.8),
-                          ]
-                        : [darkModeMedium, darkModeDark],
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: _rsvpStatus == 'maybe'
-                      ? []
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(28),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(28),
-                    onTap: () => _rsvpToEvent('maybe'),
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _rsvpStatus == 'maybe'
-                                ? Icons.help_rounded
-                                : Icons.help_outline_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _rsvpStatus == 'maybe' ? 'Maybe going' : 'Maybe',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              if (_hasRsvped) ...[
-                const SizedBox(height: 12),
-                // Cancel/Not going button
-                Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: _rsvpStatus == 'not_going'
-                          ? [
-                              lightModeDark.withValues(alpha: 0.8),
-                              lightModeDark.withValues(alpha: 0.8),
-                            ]
-                          : [
-                              lightModeDark,
-                              lightModeDark.withValues(alpha: 0.8),
-                            ],
-                    ),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: _rsvpStatus == 'not_going'
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(28),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(28),
-                      onTap: () => _rsvpToEvent('not_going'),
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _rsvpStatus == 'not_going'
-                                  ? Icons.cancel_rounded
-                                  : Icons.cancel_outlined,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _rsvpStatus == 'not_going'
-                                  ? 'Not going'
-                                  : 'Cancel RSVP',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                const SizedBox(height: 8),
+                Text(
+                  _placemark != null
+                      ? _formatAddress(_placemark!)
+                      : 'Loading location...',
+                  style: TextStyle(
+                    color: isDarkMode
+                        ? darkModeMedium
+                        : Colors.grey[600],
+                    fontSize: 14,
                   ),
                 ),
               ],
-            ],
+            ),
+          ),
+        ),
+        
+        if (!_event!.isFull) ...[
+          // RSVP action section
+          Card(
+            elevation: 0,
+            color: isDarkMode
+                ? darkModeMedium.withValues(alpha: 0.3)
+                : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+              side: BorderSide(
+                color: isDarkMode
+                    ? darkModeMedium
+                    : lightModeMedium.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _hasRsvped ? 'Your RSVP' : 'Will you attend this event?',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isDarkMode ? highlight : lightModeDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  if (_hasRsvped) ...[
+                    // Show current RSVP status
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (_rsvpStatus == 'going' ? lightModeMedium : 
+                               _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark)
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: (_rsvpStatus == 'going' ? lightModeMedium : 
+                                 _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark)
+                              .withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _rsvpStatus == 'going' ? Icons.check_circle_rounded :
+                            _rsvpStatus == 'maybe' ? Icons.help_rounded : Icons.cancel_rounded,
+                            color: _rsvpStatus == 'going' ? lightModeMedium : 
+                                   _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'You RSVPed: ${_rsvpStatus == 'going' ? 'Going' : 
+                                          _rsvpStatus == 'maybe' ? 'Maybe' : 'Not Going'}',
+                            style: TextStyle(
+                              color: _rsvpStatus == 'going' ? lightModeMedium : 
+                                     _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Change your RSVP:',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  // RSVP buttons in row layout like voting
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: _rsvpStatus == 'going'
+                                  ? [
+                                      lightModeMedium.withValues(alpha: 0.8),
+                                      lightModeMedium.withValues(alpha: 0.8),
+                                    ]
+                                  : [lightModeMedium, lightModeDark],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: _rsvpStatus == 'going'
+                                ? []
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(24),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(24),
+                              onTap: _rsvpStatus == 'going' ? null : () => _rsvpToEvent('going'),
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        _hasRsvped
+                                            ? (_rsvpStatus == 'going'
+                                                  ? 'Current RSVP'
+                                                  : 'Going')
+                                            : 'Yes (+5)',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: _rsvpStatus == 'maybe'
+                                  ? [
+                                      darkModeMedium.withValues(alpha: 0.8),
+                                      darkModeMedium.withValues(alpha: 0.8),
+                                    ]
+                                  : [darkModeMedium, darkModeDark],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: _rsvpStatus == 'maybe'
+                                ? []
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(24),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(24),
+                              onTap: _rsvpStatus == 'maybe' ? null : () => _rsvpToEvent('maybe'),
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.help_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        _hasRsvped
+                                            ? (_rsvpStatus == 'maybe'
+                                                  ? 'Current RSVP'
+                                                  : 'Maybe')
+                                            : 'Maybe',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: _rsvpStatus == 'not_going'
+                                  ? [
+                                      lightModeDark.withValues(alpha: 0.8),
+                                      lightModeDark.withValues(alpha: 0.8),
+                                    ]
+                                  : [
+                                      lightModeDark,
+                                      lightModeDark.withValues(alpha: 0.8),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: _rsvpStatus == 'not_going'
+                                ? []
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(24),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(24),
+                              onTap: _rsvpStatus == 'not_going' ? null : () => _rsvpToEvent('not_going'),
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.cancel_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        _hasRsvped
+                                            ? (_rsvpStatus == 'not_going'
+                                                  ? 'Current RSVP'
+                                                  : 'Not Going')
+                                            : 'No',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ] else if (_event!.isFull) ...[
           Container(
@@ -1315,65 +1615,6 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                         _buildIssueDetails()
                       else
                         _buildEventDetails(),
-                      const SizedBox(height: 16),
-                      Card(
-                        elevation: 0,
-                        color: isDarkMode
-                            ? darkModeMedium.withValues(alpha: 0.3)
-                            : Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            kFloatingButtonBorderRadius,
-                          ),
-                          side: BorderSide(
-                            color: isDarkMode
-                                ? darkModeMedium
-                                : lightModeMedium.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.location_on_rounded,
-                                    color: isDarkMode
-                                        ? highlight
-                                        : lightModeDark,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Location',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDarkMode
-                                          ? highlight
-                                          : lightModeDark,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _placemark != null
-                                    ? _formatAddress(_placemark!)
-                                    : 'Loading location...',
-                                style: TextStyle(
-                                  color: isDarkMode
-                                      ? darkModeMedium
-                                      : Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
 import '../models/event.dart';
 import '../models/marker.dart';
 import '../services/supabase_service.dart';
@@ -36,12 +37,30 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _isSubmitting = false;
   late LatLng _selectedLocation;
   File? _selectedImage;
+  Placemark? _placemark;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _selectedLocation = widget.initialLocation;
+    _fetchPlacemark();
+  }
+
+  Future<void> _fetchPlacemark() async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        _selectedLocation.latitude,
+        _selectedLocation.longitude,
+      );
+      setState(() {
+        _placemark = placemarks.isNotEmpty ? placemarks[0] : null;
+      });
+    } catch (e) {
+      setState(() {
+        _placemark = null;
+      });
+    }
   }
 
   Future<void> _selectStartDate() async {
@@ -195,6 +214,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _isSubmitting = false;
       });
     }
+  }
+
+  String _formatAddress(Placemark placemark) {
+    final parts = <String>[];
+    
+    if (placemark.street != null && placemark.street!.isNotEmpty) {
+      parts.add(placemark.street!);
+    }
+    if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+      parts.add(placemark.locality!);
+    }
+    if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
+      parts.add(placemark.administrativeArea!);
+    }
+    
+    return parts.isNotEmpty ? parts.join(', ') : 'Unknown location';
   }
 
   @override
@@ -682,6 +717,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           setState(() {
                             _selectedLocation = result;
                           });
+                          _fetchPlacemark();
                         }
                       },
                       child: Padding(
@@ -719,8 +755,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
-                              'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                              _placemark != null
+                                  ? _formatAddress(_placemark!)
+                                  : 'Loading address...',
                               style: TextStyle(
                                 color: isDarkMode
                                     ? darkModeMedium
