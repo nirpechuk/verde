@@ -368,8 +368,8 @@ class _MapScreenState extends State<MapScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isActive
-                      ? (_isDarkMode ? darkModeDark : lightModeDark)
-                      : (_isDarkMode ? darkModeDark : Colors.white),
+                      ? (_isDarkMode ? highlight : lightModeDark)
+                      : (_isDarkMode ? highlight : Colors.white),
                   width: 2.5,
                 ),
                 boxShadow: [
@@ -400,8 +400,8 @@ class _MapScreenState extends State<MapScreen> {
               child: Icon(
                 isActive ? Icons.flash_on_rounded : Icons.event_rounded,
                 color: isActive
-                    ? (_isDarkMode ? darkModeDark : lightModeDark)
-                    : (_isDarkMode ? darkModeDark : Colors.white),
+                    ? (_isDarkMode ? highlight : lightModeDark)
+                    : (_isDarkMode ? highlight : Colors.white),
                 size: 22,
               ),
             ),
@@ -557,7 +557,7 @@ class _MapScreenState extends State<MapScreen> {
                     decoration: BoxDecoration(
                       color: _isDarkMode
                           ? highlight.withValues(alpha: 0.1)
-                          : lightModeDark.withValues(alpha: 0.3),
+                          : Colors.black.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(
                         kFloatingButtonBorderRadius,
                       ),
@@ -574,7 +574,7 @@ class _MapScreenState extends State<MapScreen> {
                           offset: const Offset(0, 8),
                         ),
                         BoxShadow(
-                          color: (_isDarkMode ? highlight : lightModeDark)
+                          color: (_isDarkMode ? highlight : lightModeMedium)
                               .withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 0),
@@ -626,7 +626,7 @@ class _MapScreenState extends State<MapScreen> {
                           decoration: BoxDecoration(
                             color: _isDarkMode
                                 ? highlight.withValues(alpha: 0.1)
-                                : lightModeDark.withValues(alpha: 0.3),
+                                : Colors.black.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(
                               kFloatingButtonBorderRadius,
                             ),
@@ -643,7 +643,7 @@ class _MapScreenState extends State<MapScreen> {
                                 offset: const Offset(0, 8),
                               ),
                               BoxShadow(
-                                color: (_isDarkMode ? highlight : lightModeDark)
+                                color: (_isDarkMode ? highlight : lightModeMedium)
                                     .withValues(alpha: 0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 0),
@@ -682,7 +682,7 @@ class _MapScreenState extends State<MapScreen> {
                         decoration: BoxDecoration(
                           color: _isDarkMode
                               ? highlight.withValues(alpha: 0.1)
-                              : lightModeDark.withValues(alpha: 0.3),
+                              : Colors.black.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(
                             kFloatingButtonBorderRadius,
                           ),
@@ -699,7 +699,7 @@ class _MapScreenState extends State<MapScreen> {
                               offset: const Offset(0, 8),
                             ),
                             BoxShadow(
-                              color: (_isDarkMode ? highlight : lightModeDark)
+                              color: (_isDarkMode ? highlight : lightModeMedium)
                                   .withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 0),

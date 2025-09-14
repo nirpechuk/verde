@@ -86,7 +86,7 @@ class _ExpandableFabState extends State<ExpandableFab>
       decoration: BoxDecoration(
         color: widget.isDarkMode 
             ? highlight.withValues(alpha: 0.1)
-            : lightModeDark.withValues(alpha: 0.3),
+            : Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(kMainFabBorderRadius),
         border: Border.all(
           color: widget.isDarkMode 
@@ -101,7 +101,7 @@ class _ExpandableFabState extends State<ExpandableFab>
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: (widget.isDarkMode ? highlight : lightModeDark).withValues(alpha: 0.1),
+            color: (widget.isDarkMode ? highlight : lightModeMedium).withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 0),
           ),
@@ -150,7 +150,7 @@ class _ExpandableFabState extends State<ExpandableFab>
             decoration: BoxDecoration(
               color: widget.isDarkMode 
                   ? highlight.withValues(alpha: 0.1)
-                  : lightModeDark.withValues(alpha: 0.3),
+                  : Colors.black.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(kMainFabBorderRadius),
               border: Border.all(
                 color: widget.isDarkMode 
@@ -165,7 +165,7 @@ class _ExpandableFabState extends State<ExpandableFab>
                   offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: (widget.isDarkMode ? highlight : lightModeDark).withValues(alpha: 0.1),
+                  color: (widget.isDarkMode ? highlight : lightModeMedium).withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 0),
                 ),
@@ -288,7 +288,7 @@ class ActionButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDarkMode 
             ? highlight.withValues(alpha: 0.1)
-            : lightModeDark.withValues(alpha: 0.3),
+            : Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
         border: Border.all(
           color: isDarkMode 
@@ -303,7 +303,7 @@ class ActionButton extends StatelessWidget {
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: (isDarkMode ? highlight : lightModeDark).withValues(alpha: 0.1),
+            color: (isDarkMode ? highlight : lightModeMedium).withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 0),
           ),

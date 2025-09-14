@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 // Color Constants
 const Color highlight = Color(0xFFF0EAD2);
 const Color lightModeMedium = Color.fromARGB(255, 52, 125, 0);
-const Color lightModeDark = Color(0xFF143601);
+const Color lightModeDark = Color.fromARGB(255, 28, 74, 1);
 const Color darkModeMedium = Color(0xFFA98467);
-const Color darkModeDark = Color(0xFF6C584C);
+const Color darkModeDark = Color.fromARGB(255, 86, 69, 59);
 
 const double kFabButtonSpacing = 13.0;
 const kIconSize = 50.0;
