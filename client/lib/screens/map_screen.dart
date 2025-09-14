@@ -110,8 +110,8 @@ class _MapScreenState extends State<MapScreen> {
 
       try {
         final position = await Geolocator.getCurrentPosition();
-        final double bostonLat = 42.3601;
-        final double bostonLng = -71.0589;
+        final double bostonLat = 42.35857;
+        final double bostonLng = -71.09635;
         final double distanceThreshold = 1;
         final double distance = Geolocator.distanceBetween(
           _currentLocation.latitude,
