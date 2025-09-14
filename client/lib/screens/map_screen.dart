@@ -410,9 +410,9 @@ class _MapScreenState extends State<MapScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        _isDarkMode ? darkModeMedium : lightModeDark,
+                        _isDarkMode ? darkModeDark : lightModeDark,
                         _isDarkMode
-                            ? darkModeDark
+                            ? darkModeDark.withValues(alpha: 0.8)
                             : lightModeDark.withValues(alpha: 0.8),
                       ],
                     ),
@@ -611,6 +611,7 @@ class _MapScreenState extends State<MapScreen> {
       // Too far out - minimal white glow
       return {
         'color': Colors.white,
+        'alpha': 0.1,
         'description': 'far_future'
       };
     }
