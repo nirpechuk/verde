@@ -40,6 +40,7 @@ class _MapScreenState extends State<MapScreen> {
   RealtimeChannel? _markersChannel;
   RealtimeChannel? _eventsChannel;
   RealtimeChannel? _issuesChannel;
+  RealtimeChannel? _issueVotesChannel;
 
   @override
   void initState() {
@@ -184,6 +185,8 @@ class _MapScreenState extends State<MapScreen> {
               final issueVoteStats = await SupabaseService.getIssueVoteStats(
                 issue.id,
               );
+              // Add credibility score to vote stats
+              issueVoteStats['credibility'] = issue.credibilityScore;
               voteStats[marker.id] = issueVoteStats;
             }
           } catch (e) {
@@ -194,6 +197,7 @@ class _MapScreenState extends State<MapScreen> {
               'downvotes': 0,
               'total': 0,
               'score': 0,
+              'credibility': 0,
             };
           }
         } else {
@@ -255,13 +259,14 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
 
-    // Add issue markers with aesthetic colors - these will appear on top
-    // Alpha transparency is applied based on vote score for visual credibility indication
+    // Add issue markers with red outline based on credibility
+    // Red outline alpha is based on both vote score and credibility score
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
-      // Get vote statistics for this marker to determine alpha
-      final voteStats = _markerVoteStats[marker.id] ?? {'score': 0};
+      // Get vote statistics and credibility for this marker
+      final voteStats = _markerVoteStats[marker.id] ?? {'score': 0, 'credibility': 0};
       final voteScore = voteStats['score'] ?? 0;
-      final markerAlpha = _calculateMarkerAlpha(voteScore);
+      final credibilityScore = voteStats['credibility'] ?? 0;
+      final redOutlineAlpha = _calculateRedOutlineAlpha(voteScore, credibilityScore);
 
       mapMarkers.add(
         Marker(
@@ -270,56 +275,68 @@ class _MapScreenState extends State<MapScreen> {
           height: 44,
           child: GestureDetector(
             onTap: () => _onMarkerTapped(marker),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    (_isDarkMode ? darkModeMedium : lightModeDark).withValues(
-                      alpha: markerAlpha,
-                    ),
-                    (_isDarkMode
-                            ? darkModeDark
-                            : lightModeDark.withValues(alpha: 0.8))
-                        .withValues(alpha: markerAlpha * 0.8),
-                  ],
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color:
-                      (_isDarkMode
-                              ? highlight.withValues(alpha: 0.8)
-                              : Colors.white)
-                          .withValues(alpha: markerAlpha),
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25 * markerAlpha),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                    spreadRadius: 1,
-                  ),
-                  BoxShadow(
-                    color: ((_isDarkMode ? darkModeMedium : lightModeDark)
-                        .withValues(alpha: 0.3 * markerAlpha)),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
+            child: Stack(
               alignment: Alignment.center,
-              child: Transform.translate(
-                offset: const Offset(0, -1),
-                child: Icon(
-                  Icons.warning_rounded,
-                  color: (_isDarkMode ? highlight : Colors.white).withValues(
-                    alpha: markerAlpha,
+              children: [
+                // Main marker container
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        _isDarkMode ? darkModeMedium : lightModeDark,
+                        _isDarkMode
+                            ? darkModeDark
+                            : lightModeDark.withValues(alpha: 0.8),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _isDarkMode
+                          ? highlight.withValues(alpha: 0.8)
+                          : Colors.white,
+                      width: 2.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                        spreadRadius: 1,
+                      ),
+                      BoxShadow(
+                        color: (_isDarkMode ? darkModeMedium : lightModeDark)
+                            .withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
-                  size: 22,
+                  alignment: Alignment.center,
+                  child: Transform.translate(
+                    offset: const Offset(0, -1),
+                    child: Icon(
+                      Icons.warning_rounded,
+                      color: _isDarkMode ? highlight : Colors.white,
+                      size: 22,
+                    ),
+                  ),
                 ),
-              ),
+                // Red warning outline for low credibility/vote scores
+                if (redOutlineAlpha > 0.1)
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: redOutlineAlpha),
+                        width: 3.0,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -435,20 +452,25 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  /// Calculate alpha transparency based on vote score
-  double _calculateMarkerAlpha(int voteScore) {
-    // Issues with positive scores (>= 0) should be fully opaque
-    if (voteScore >= 0) {
-      return 1.0;
-    }
 
-    // For negative scores, gradually decrease alpha
-    const double baseAlpha = 1.0;
-    const double alphaDecrement = 0.25;
-    const double minAlpha = 0.3;
-
-    final double calculatedAlpha = baseAlpha + (voteScore * alphaDecrement);
-    return calculatedAlpha.clamp(minAlpha, baseAlpha);
+  double _calculateRedOutlineAlpha(int voteScore, int credibilityScore) {
+    // Calculate alpha for red outline based on both vote score and credibility
+    // Higher scores = more visible red outline (higher alpha)
+    // Range: 0.0 (low scores) to 0.8 (high scores)
+    
+    // Normalize vote score (typically ranges from -10 to +10)
+    final normalizedVoteScore = (voteScore + 5) / 10.0; // 0.0 to 1.0
+    
+    // Normalize credibility score (ranges from 0 to 10)
+    final normalizedCredibilityScore = credibilityScore / 10.0; // 0.0 to 1.0
+    
+    // Average the two scores (higher = more credible/well-voted)
+    final averageScore = (normalizedVoteScore + normalizedCredibilityScore) / 2.0;
+    
+    // Higher scores give higher alpha (more visible red outline)
+    final outlineAlpha = averageScore * 0.8;
+    
+    return outlineAlpha.clamp(0.0, 0.8);
   }
 
   Future<void> _onReportIssue() async {
