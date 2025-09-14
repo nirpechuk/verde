@@ -2,11 +2,13 @@
 
 # [YouTube Demo](https://www.youtube.com/watch?v=00KMYpdCVno&ab_channel=NirPechuk)
 
-# Empowering Environmental Actions by Leveraging the Power of Community
+# Empowering Community-driven Environmental Actions
 
 **verde** ("green" in several Romance languages) is an app providing a **real-time**, **interactive** map that serves as a hub for **community-led environmental action**.
 
 This map is managed and enriched by agents, which asynchronously pull data, cluster issues, and organize environmental events.
+
+This project was built in under 24 hours as a submission to the 2025 HackMIT global hackathon.
 
 ## Inspiration
 Have you ever noticed an environmental issue but not been able to address it alone? 🤔
