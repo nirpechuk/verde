@@ -98,9 +98,32 @@ class _MapScreenState extends State<MapScreen> {
         northeast,
       );
       final events = await SupabaseService.getEvents();
+      
+      // Get issue IDs that have linked fix events
+      final issueIdsWithEvents = await SupabaseService.getIssueIdsWithLinkedEvents();
+      
+      // Filter out issue markers that have linked fix events
+      final filteredMarkers = <AppMarker>[];
+      for (final marker in markers) {
+        if (marker.type == MarkerType.issue) {
+          // Load the issue to check if it has a linked event
+          try {
+            final issue = await SupabaseService.getIssueByMarkerId(marker.id);
+            if (!issueIdsWithEvents.contains(issue.id)) {
+              filteredMarkers.add(marker);
+            }
+          } catch (e) {
+            // If we can't load the issue, include the marker anyway
+            filteredMarkers.add(marker);
+          }
+        } else {
+          // Always include event markers
+          filteredMarkers.add(marker);
+        }
+      }
 
       setState(() {
-        _markers = markers;
+        _markers = filteredMarkers;
         _events = events;
       });
     } catch (e) {
