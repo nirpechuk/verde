@@ -6,6 +6,7 @@ import '../models/event.dart';
 import '../models/marker.dart';
 import '../services/supabase_service.dart';
 import '../widgets/location_picker.dart';
+import '../helpers/utils.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final LatLng initialLocation;
@@ -201,74 +202,58 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Event'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Card(
-                  child: InkWell(
-                    onTap: () async {
-                      final result = await Navigator.push<LatLng>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LocationPickerScreen(
-                            initialLocation: _selectedLocation,
-                            title: 'Select Event Location',
-                          ),
+      backgroundColor: isDarkMode ? darkModeDark : Colors.grey[50],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header with back button
+                  Row(
+                    children: [
+                      Container(
+                        width: kFloatingButtonSize,
+                        height: kFloatingButtonSize,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? darkModeMedium : lightModeMedium,
+                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          boxShadow: kFloatingButtonShadow,
                         ),
-                      );
-                      if (result != null) {
-                        setState(() {
-                          _selectedLocation = result;
-                        });
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Location',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const Spacer(),
-                              const Icon(Icons.edit_location, color: Colors.green),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
-                            'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Tap to change location',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                            onTap: () => Navigator.pop(context),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: isDarkMode ? highlight : Colors.white,
+                              size: kFloatingButtonIconSize,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          'Create Event',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? highlight : lightModeDark,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                 Card(
                   child: InkWell(
                     onTap: _pickImage,
@@ -323,10 +308,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Event Title *',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
+                    ),
                     hintText: 'e.g., Community Park Cleanup',
+                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                    filled: true,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -338,9 +336,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<EventCategory>(
                   value: _selectedCategory,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Category *',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
+                    ),
+                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                    filled: true,
                   ),
                   items: EventCategory.values.map((category) {
                     return DropdownMenuItem(
@@ -359,10 +370,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
+                    ),
                     hintText: 'Event details, what to bring, etc...',
+                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                    filled: true,
                   ),
                   maxLines: 3,
                 ),
@@ -465,10 +489,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _maxParticipantsController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Max Participants (Optional)',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? darkModeMedium : lightModeMedium),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      borderSide: BorderSide(color: isDarkMode ? highlight : lightModeDark, width: 2),
+                    ),
                     hintText: 'Leave empty for unlimited',
+                    fillColor: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                    filled: true,
                   ),
                   keyboardType: TextInputType.number,
                   validator: (value) {
@@ -482,21 +519,133 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitEvent,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                Container(
+                  width: double.infinity,
+                  height: kFloatingButtonSize,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: _isSubmitting ? [
+                        (isDarkMode ? darkModeMedium : lightModeMedium).withValues(alpha: 0.5),
+                        (isDarkMode ? darkModeMedium : lightModeMedium).withValues(alpha: 0.5),
+                      ] : [
+                        isDarkMode ? lightModeMedium : lightModeMedium,
+                        isDarkMode ? lightModeDark : lightModeDark,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                    boxShadow: _isSubmitting ? [] : kFloatingButtonShadow,
                   ),
-                  child: _isSubmitting
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Create Event (+20 Points)',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      onTap: _isSubmitting ? null : _submitEvent,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child:
+                        _isSubmitting
+                            ? CircularProgressIndicator(
+                                color: isDarkMode ? highlight : Colors.white,
+                                strokeWidth: 2,
+                              )
+                            : Text(
+                                'Create Event (+20 Points)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDarkMode ? highlight : Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
                 ),
-              ],
+                const SizedBox(height: 16),
+                  // Move location section to bottom
+                  Card(
+                    elevation: 0,
+                    color: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      side: BorderSide(
+                        color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                      onTap: () async {
+                        final result = await Navigator.push<LatLng>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LocationPickerScreen(
+                              initialLocation: _selectedLocation,
+                              title: 'Select Event Location',
+                            ),
+                          ),
+                        );
+                        if (result != null) {
+                          setState(() {
+                            _selectedLocation = result;
+                          });
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_rounded,
+                                  color: isDarkMode ? highlight : lightModeDark,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Event Location',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDarkMode ? highlight : lightModeDark,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.edit_rounded,
+                                  color: isDarkMode ? darkModeMedium : lightModeMedium,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}\n'
+                              'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                              style: TextStyle(
+                                color: isDarkMode ? darkModeMedium : Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Tap to change location',
+                              style: TextStyle(
+                                color: isDarkMode ? lightModeMedium : lightModeDark,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

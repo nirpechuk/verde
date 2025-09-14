@@ -4,6 +4,7 @@ import '../models/marker.dart';
 import '../models/issue.dart';
 import '../models/event.dart';
 import '../services/supabase_service.dart';
+import '../helpers/utils.dart';
 import 'auth_screen.dart';
 
 class MarkerDetailsScreen extends StatefulWidget {
@@ -414,108 +415,6 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         ),
         const SizedBox(height: 16),
         
-        // Voting statistics card
-        if (_voteStats['total']! > 0)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Community Voting',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green.withOpacity(0.3)),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.thumb_up, color: Colors.green, size: 20),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${_voteStats['upvotes']}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Text(
-                                'Credible',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red.withOpacity(0.3)),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.thumb_down, color: Colors.red, size: 20),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${_voteStats['downvotes']}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Text(
-                                'Not Credible',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        
-        const SizedBox(height: 16),
-        
         // Voting action section
         Card(
           child: Padding(
@@ -571,37 +470,125 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _userVote == 1 ? null : () => _voteOnIssue(1),
-                        icon: const Icon(Icons.thumb_up),
-                        label: Text(_hasVoted 
-                          ? (_userVote == 1 ? 'Current Vote' : 'Change to Credible')
-                          : 'Yes (+1 Point)'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _userVote == 1 
-                            ? Colors.green.shade700 
-                            : Colors.green,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.green.shade700,
-                          disabledForegroundColor: Colors.white,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: _userVote == 1 ? [
+                              lightModeMedium.withValues(alpha: 0.8),
+                              lightModeMedium.withValues(alpha: 0.8),
+                            ] : [
+                              lightModeMedium,
+                              lightModeDark,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: _userVote == 1 ? [] : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: _userVote == 1 ? null : () => _voteOnIssue(1),
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.thumb_up_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      _hasVoted 
+                                        ? (_userVote == 1 ? 'Current Vote' : 'Credible')
+                                        : 'Yes (+1)',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _userVote == -1 ? null : () => _voteOnIssue(-1),
-                        icon: const Icon(Icons.thumb_down),
-                        label: Text(_hasVoted 
-                          ? (_userVote == -1 ? 'Current Vote' : 'Change to Not Credible')
-                          : 'No (+1 Point)'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _userVote == -1 
-                            ? Colors.red.shade700 
-                            : Colors.red,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.red.shade700,
-                          disabledForegroundColor: Colors.white,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: _userVote == -1 ? [
+                              lightModeDark.withValues(alpha: 0.8),
+                              lightModeDark.withValues(alpha: 0.8),
+                            ] : [
+                              lightModeDark,
+                              lightModeDark.withValues(alpha: 0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: _userVote == -1 ? [] : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: _userVote == -1 ? null : () => _voteOnIssue(-1),
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.thumb_down_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      _hasVoted 
+                                        ? (_userVote == -1 ? 'Current Vote' : 'Not Credible')
+                                        : 'No (+1)',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -614,16 +601,49 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         
         // Create fix event button
         const SizedBox(height: 16),
-        SizedBox(
+        Container(
           width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _createFixEvent,
-            icon: const Icon(Icons.build),
-            label: const Text('Create Fix Event (+20 Points)'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+          height: kFloatingButtonSize,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                lightModeMedium,
+                lightModeDark,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+            boxShadow: kFloatingButtonShadow,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+              onTap: _createFixEvent,
+              child: Container(
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.build_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Create Fix Event (+20 Points)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -633,108 +653,11 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
   Widget _buildEventDetails() {
     if (_event == null) return const SizedBox();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Show linked issue information if this is a fix event
-        if (_linkedIssue != null) ...[
-          Card(
-            color: Colors.red.withOpacity(0.1),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.warning, color: Colors.red, size: 20),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Addressing Issue',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _linkedIssue!.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (_linkedIssue!.description != null) ...[
-                    const SizedBox(height: 8),
-                    Text(_linkedIssue!.description!),
-                  ],
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red),
-                        ),
-                        child: Text(
-                          _linkedIssue!.category.name.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Credibility: ${_linkedIssue!.credibilityScore}/10',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_linkedIssue!.imageUrl != null) ...[
-                    const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        _linkedIssue!.imageUrl!,
-                        width: double.infinity,
-                        height: 150,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 150,
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 30,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -892,6 +815,122 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
             ),
           ),
         ),
+
+        // Show linked issue information if this is a fix event
+        if (_linkedIssue != null) ...[
+          Card(
+            elevation: 0,
+            color: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : lightModeMedium.withValues(alpha: 0.1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+              side: BorderSide(
+                color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.warning_rounded, 
+                        color: isDarkMode ? highlight : lightModeDark, 
+                        size: 20
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Addressing Issue',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? highlight : lightModeDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _linkedIssue!.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? highlight : lightModeDark,
+                    ),
+                  ),
+                  if (_linkedIssue!.description != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _linkedIssue!.description!,
+                      style: TextStyle(
+                        color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? lightModeMedium.withValues(alpha: 0.2) : lightModeMedium.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDarkMode ? lightModeMedium : lightModeMedium),
+                        ),
+                        child: Text(
+                          _linkedIssue!.category.name.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? lightModeMedium : lightModeDark,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Credibility: ${_linkedIssue!.credibilityScore}/10',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_linkedIssue!.imageUrl != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        _linkedIssue!.imageUrl!,
+                        width: double.infinity,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 150,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 30,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         const SizedBox(height: 16),
         if (!_event!.isFull) ...[
           Text(
@@ -901,64 +940,182 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           const SizedBox(height: 8),
           Column(
             children: [
-              SizedBox(
+              // Going button
+              Container(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _rsvpToEvent('going'),
-                  icon: Icon(
-                    _rsvpStatus == 'going'
-                        ? Icons.check_circle
-                        : Icons.check_circle_outline,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: _rsvpStatus == 'going' ? [
+                      lightModeMedium.withValues(alpha: 0.8),
+                      lightModeMedium.withValues(alpha: 0.8),
+                    ] : [
+                      lightModeMedium,
+                      lightModeDark,
+                    ],
                   ),
-                  label: Text(
-                    _rsvpStatus == 'going'
-                        ? 'Going!'
-                        : 'Yes, I\'m going! (+5 Points)',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _rsvpStatus == 'going'
-                        ? Colors.green.shade700
-                        : Colors.green,
-                    foregroundColor: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: _rsvpStatus == 'going' ? [] : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(28),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(28),
+                    onTap: () => _rsvpToEvent('going'),
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _rsvpStatus == 'going'
+                                ? Icons.check_circle_rounded
+                                : Icons.check_circle_outline_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _rsvpStatus == 'going'
+                                ? 'Going!'
+                                : 'Yes, I\'m going! (+5 Points)',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              SizedBox(
+              const SizedBox(height: 12),
+              // Maybe button
+              Container(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _rsvpToEvent('maybe'),
-                  icon: Icon(
-                    _rsvpStatus == 'maybe' ? Icons.help : Icons.help_outline,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: _rsvpStatus == 'maybe' ? [
+                      darkModeMedium.withValues(alpha: 0.8),
+                      darkModeMedium.withValues(alpha: 0.8),
+                    ] : [
+                      darkModeMedium,
+                      darkModeDark,
+                    ],
                   ),
-                  label: Text(_rsvpStatus == 'maybe' ? 'Maybe going' : 'Maybe'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _rsvpStatus == 'maybe'
-                        ? Colors.orange.shade700
-                        : Colors.orange,
-                    foregroundColor: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: _rsvpStatus == 'maybe' ? [] : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(28),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(28),
+                    onTap: () => _rsvpToEvent('maybe'),
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _rsvpStatus == 'maybe' 
+                                ? Icons.help_rounded 
+                                : Icons.help_outline_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _rsvpStatus == 'maybe' ? 'Maybe going' : 'Maybe',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
               if (_hasRsvped) ...[
-                const SizedBox(height: 8),
-                SizedBox(
+                const SizedBox(height: 12),
+                // Cancel/Not going button
+                Container(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _rsvpToEvent('not_going'),
-                    icon: Icon(
-                      _rsvpStatus == 'not_going'
-                          ? Icons.cancel
-                          : Icons.cancel_outlined,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: _rsvpStatus == 'not_going' ? [
+                        lightModeDark.withValues(alpha: 0.8),
+                        lightModeDark.withValues(alpha: 0.8),
+                      ] : [
+                        lightModeDark,
+                        lightModeDark.withValues(alpha: 0.8),
+                      ],
                     ),
-                    label: Text(
-                      _rsvpStatus == 'not_going' ? 'Not going' : 'Cancel RSVP',
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _rsvpStatus == 'not_going'
-                          ? Colors.grey.shade700
-                          : Colors.grey,
-                      foregroundColor: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: _rsvpStatus == 'not_going' ? [] : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(28),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(28),
+                      onTap: () => _rsvpToEvent('not_going'),
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _rsvpStatus == 'not_going'
+                                  ? Icons.cancel_rounded
+                                  : Icons.cancel_outlined,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _rsvpStatus == 'not_going' ? 'Not going' : 'Cancel RSVP',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -1050,58 +1207,122 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.marker.type == MarkerType.issue
-              ? 'Issue Details'
-              : 'Event Details',
-        ),
-        backgroundColor: widget.marker.type == MarkerType.issue
-            ? Colors.red
-            : Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Location',
-                              style: Theme.of(context).textTheme.titleMedium,
+      backgroundColor: isDarkMode ? darkModeDark : Colors.grey[50],
+      body: SafeArea(
+        child: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: isDarkMode ? highlight : lightModeDark,
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header with back button
+                      Row(
+                        children: [
+                          Container(
+                            width: kFloatingButtonSize,
+                            height: kFloatingButtonSize,
+                            decoration: BoxDecoration(
+                              color: widget.marker.type == MarkerType.issue
+                                  ? (isDarkMode ? darkModeMedium : lightModeDark)
+                                  : (isDarkMode ? lightModeMedium : lightModeMedium),
+                              borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                              boxShadow: kFloatingButtonShadow,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              // 'Lat: ${widget.marker.location.latitude.toStringAsFixed(6)}\n'
-                              // 'Lng: ${widget.marker.location.longitude.toStringAsFixed(6)}',
-                              _placemark != null
-                                  ? _formatAddress(_placemark!)
-                                  : 'Loading location...',
-                              style: Theme.of(context).textTheme.bodySmall,
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                                onTap: () => Navigator.pop(context),
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: isDarkMode ? highlight : Colors.white,
+                                  size: kFloatingButtonIconSize,
+                                ),
+                              ),
                             ),
-                          ],
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              widget.marker.type == MarkerType.issue
+                                  ? 'Issue Details'
+                                  : 'Event Details',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: isDarkMode ? highlight : lightModeDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      if (widget.marker.type == MarkerType.issue)
+                        _buildIssueDetails()
+                      else
+                        _buildEventDetails(),
+                      const SizedBox(height: 16),
+                      Card(
+                        elevation: 0,
+                        color: isDarkMode ? darkModeMedium.withValues(alpha: 0.3) : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          side: BorderSide(
+                            color: isDarkMode ? darkModeMedium : lightModeMedium.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on_rounded,
+                                    color: isDarkMode ? highlight : lightModeDark,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Location',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkMode ? highlight : lightModeDark,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _placemark != null
+                                    ? _formatAddress(_placemark!)
+                                    : 'Loading location...',
+                                style: TextStyle(
+                                  color: isDarkMode ? darkModeMedium : Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (widget.marker.type == MarkerType.issue)
-                      _buildIssueDetails()
-                    else
-                      _buildEventDetails(),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 }
