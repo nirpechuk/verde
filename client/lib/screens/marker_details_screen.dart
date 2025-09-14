@@ -358,8 +358,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 Text(
                   'Credibility: ${_issue!.credibilityScore}/10',
                   style: TextStyle(
-                    fontSize: 12, 
-                    color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.grey[700],
+                    fontSize: 12,
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.7)
+                        : Colors.grey[700],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -377,7 +379,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     _issue!.description!,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isDarkMode ? Colors.white.withOpacity(0.9) : Colors.grey[700],
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
@@ -461,7 +465,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   'Reported: ${_formatDate(_issue!.createdAt)}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDarkMode ? Colors.white.withOpacity(0.6) : Colors.grey[600],
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.6)
+                        : Colors.grey[600],
                   ),
                 ),
               ],
@@ -476,9 +482,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               ? darkModeMedium.withValues(alpha: 0.3)
               : Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              kFloatingButtonBorderRadius,
-            ),
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
             side: BorderSide(
               color: isDarkMode
                   ? darkModeMedium
@@ -494,9 +498,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   children: [
                     Icon(
                       Icons.location_on_rounded,
-                      color: isDarkMode
-                          ? highlight
-                          : lightModeDark,
+                      color: isDarkMode ? highlight : lightModeDark,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -505,9 +507,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isDarkMode
-                            ? highlight
-                            : lightModeDark,
+                        color: isDarkMode ? highlight : lightModeDark,
                       ),
                     ),
                   ],
@@ -615,8 +615,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   Text(
                     'Change your vote:',
                     style: TextStyle(
-                      fontSize: 14, 
-                      color: isDarkMode ? Colors.white.withOpacity(0.6) : Colors.grey,
+                      fontSize: 14,
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.6)
+                          : Colors.grey,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -672,9 +674,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                   Flexible(
                                     child: Text(
                                       _hasVoted
-                                          ? (_userVote == 1
-                                                ? 'Current Vote'
-                                                : 'Credible')
+                                          // ? (_userVote == 1
+                                          //       ? 'Current Vote'
+                                          //       : 'Credible')
+                                          ? 'Credible'
                                           : 'Yes (+1)',
                                       style: const TextStyle(
                                         fontSize: 14,
@@ -742,9 +745,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                   Flexible(
                                     child: Text(
                                       _hasVoted
-                                          ? (_userVote == -1
-                                                ? 'Current Vote'
-                                                : 'Not Credible')
+                                          // ? (_userVote == -1
+                                          //       ? 'Current Vote'
+                                          //       : 'Not Credible')
+                                          ? 'Not Credible'
                                           : 'No (+1)',
                                       style: const TextStyle(
                                         fontSize: 14,
@@ -883,7 +887,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [highlight, highlight.withValues(alpha: 0.8)],
+                            colors: [
+                              highlight,
+                              highlight.withValues(alpha: 0.8),
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
@@ -920,7 +927,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     _event!.description!,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isDarkMode ? Colors.white.withOpacity(0.9) : Colors.grey[700],
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.9)
+                          : Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
@@ -1005,15 +1014,19 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 Row(
                   children: [
                     Icon(
-                      Icons.schedule, 
+                      Icons.schedule,
                       size: 16,
-                      color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.8)
+                          : Colors.grey[700],
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${_formatDateTime(_event!.startTime)} - ${_formatDateTime(_event!.endTime)}',
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                        color: isDarkMode
+                            ? Colors.white.withOpacity(0.8)
+                            : Colors.grey[700],
                         fontSize: 14,
                       ),
                     ),
@@ -1023,9 +1036,11 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 Row(
                   children: [
                     Icon(
-                      Icons.people, 
+                      Icons.people,
                       size: 16,
-                      color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.8)
+                          : Colors.grey[700],
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -1033,7 +1048,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                           ? '${_event!.currentParticipants}/${_event!.maxParticipants} participants'
                           : '${_event!.currentParticipants} participants',
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                        color: isDarkMode
+                            ? Colors.white.withOpacity(0.8)
+                            : Colors.grey[700],
                         fontSize: 14,
                       ),
                     ),
@@ -1096,7 +1113,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     Text(
                       _linkedIssue!.description!,
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white.withValues(alpha: 0.9) : Colors.grey[700],
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 0.9)
+                            : Colors.grey[700],
                       ),
                     ),
                   ],
@@ -1133,7 +1152,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                         'Credibility: ${_linkedIssue!.credibilityScore}/10',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDarkMode ? Colors.white.withValues(alpha: 0.8) : Colors.grey[700],
+                          color: isDarkMode
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : Colors.grey[700],
                         ),
                       ),
                     ],
@@ -1167,7 +1188,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               ),
             ),
           ),
-        ],        
+        ],
         // Location section for events
         Card(
           elevation: 0,
@@ -1175,9 +1196,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               ? darkModeMedium.withValues(alpha: 0.3)
               : Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              kFloatingButtonBorderRadius,
-            ),
+            borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
             side: BorderSide(
               color: isDarkMode
                   ? darkModeMedium
@@ -1193,9 +1212,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                   children: [
                     Icon(
                       Icons.location_on_rounded,
-                      color: isDarkMode
-                          ? highlight
-                          : lightModeDark,
+                      color: isDarkMode ? highlight : lightModeDark,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -1204,9 +1221,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isDarkMode
-                            ? highlight
-                            : lightModeDark,
+                        color: isDarkMode ? highlight : lightModeDark,
                       ),
                     ),
                   ],
@@ -1240,7 +1255,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
             ),
           ),
         ),
-        
+
         if (!_event!.isFull) ...[
           // RSVP action section
           Card(
@@ -1270,7 +1285,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _hasRsvped ? 'Your RSVP' : 'Will you attend this event?',
+                        _hasRsvped
+                            ? 'Your RSVP'
+                            : 'Will you attend this event?',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -1286,31 +1303,51 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: (_rsvpStatus == 'going' ? lightModeMedium : 
-                               _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark)
-                            .withOpacity(0.1),
+                        color:
+                            (_rsvpStatus == 'going'
+                                    ? lightModeMedium
+                                    : _rsvpStatus == 'maybe'
+                                    ? darkModeMedium
+                                    : lightModeDark)
+                                .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: (_rsvpStatus == 'going' ? lightModeMedium : 
-                                 _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark)
-                              .withOpacity(0.3),
+                          color:
+                              (_rsvpStatus == 'going'
+                                      ? lightModeMedium
+                                      : _rsvpStatus == 'maybe'
+                                      ? darkModeMedium
+                                      : lightModeDark)
+                                  .withOpacity(0.3),
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            _rsvpStatus == 'going' ? Icons.check_circle_rounded :
-                            _rsvpStatus == 'maybe' ? Icons.help_rounded : Icons.cancel_rounded,
-                            color: _rsvpStatus == 'going' ? lightModeMedium : 
-                                   _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark,
+                            _rsvpStatus == 'going'
+                                ? Icons.check_circle_rounded
+                                : _rsvpStatus == 'maybe'
+                                ? Icons.help_rounded
+                                : Icons.cancel_rounded,
+                            color: _rsvpStatus == 'going'
+                                ? lightModeMedium
+                                : _rsvpStatus == 'maybe'
+                                ? darkModeMedium
+                                : lightModeDark,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'You RSVPed: ${_rsvpStatus == 'going' ? 'Going' : 
-                                          _rsvpStatus == 'maybe' ? 'Maybe' : 'Not Going'}',
+                            'You RSVPed: ${_rsvpStatus == 'going'
+                                ? 'Going'
+                                : _rsvpStatus == 'maybe'
+                                ? 'Maybe'
+                                : 'Not Going'}',
                             style: TextStyle(
-                              color: _rsvpStatus == 'going' ? lightModeMedium : 
-                                     _rsvpStatus == 'maybe' ? darkModeMedium : lightModeDark,
+                              color: _rsvpStatus == 'going'
+                                  ? lightModeMedium
+                                  : _rsvpStatus == 'maybe'
+                                  ? darkModeMedium
+                                  : lightModeDark,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1347,7 +1384,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                 ? []
                                 : [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1358,7 +1397,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                             borderRadius: BorderRadius.circular(24),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(24),
-                              onTap: _rsvpStatus == 'going' ? null : () => _rsvpToEvent('going'),
+                              onTap: _rsvpStatus == 'going'
+                                  ? null
+                                  : () => _rsvpToEvent('going'),
                               child: Container(
                                 alignment: Alignment.center,
                                 child: Row(
@@ -1373,9 +1414,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                     Flexible(
                                       child: Text(
                                         _hasRsvped
-                                            ? (_rsvpStatus == 'going'
-                                                  ? 'Current RSVP'
-                                                  : 'Going')
+                                            // ? (_rsvpStatus == 'going'
+                                            //       ? 'Current RSVP'
+                                            //       : 'Going')
+                                            ? 'Going'
                                             : 'Yes (+5)',
                                         style: const TextStyle(
                                           fontSize: 14,
@@ -1412,7 +1454,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                 ? []
                                 : [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1423,7 +1467,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                             borderRadius: BorderRadius.circular(24),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(24),
-                              onTap: _rsvpStatus == 'maybe' ? null : () => _rsvpToEvent('maybe'),
+                              onTap: _rsvpStatus == 'maybe'
+                                  ? null
+                                  : () => _rsvpToEvent('maybe'),
                               child: Container(
                                 alignment: Alignment.center,
                                 child: Row(
@@ -1438,9 +1484,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                     Flexible(
                                       child: Text(
                                         _hasRsvped
-                                            ? (_rsvpStatus == 'maybe'
-                                                  ? 'Current RSVP'
-                                                  : 'Maybe')
+                                            // ? (_rsvpStatus == 'maybe'
+                                            //       ? 'Current RSVP'
+                                            //       : 'Maybe')
+                                            ? 'Maybe'
                                             : 'Maybe',
                                         style: const TextStyle(
                                           fontSize: 14,
@@ -1480,7 +1527,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                 ? []
                                 : [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1491,7 +1540,9 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                             borderRadius: BorderRadius.circular(24),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(24),
-                              onTap: _rsvpStatus == 'not_going' ? null : () => _rsvpToEvent('not_going'),
+                              onTap: _rsvpStatus == 'not_going'
+                                  ? null
+                                  : () => _rsvpToEvent('not_going'),
                               child: Container(
                                 alignment: Alignment.center,
                                 child: Row(
@@ -1506,9 +1557,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                                     Flexible(
                                       child: Text(
                                         _hasRsvped
-                                            ? (_rsvpStatus == 'not_going'
-                                                  ? 'Current RSVP'
-                                                  : 'Not Going')
+                                            // ? (_rsvpStatus == 'not_going'
+                                            //       ? 'Current RSVP'
+                                            //       : 'Not Going')
+                                            ? 'No'
                                             : 'No',
                                         style: const TextStyle(
                                           fontSize: 14,
