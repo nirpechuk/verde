@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/marker.dart';
 import '../models/issue.dart';
 import '../models/event.dart';
 import '../services/supabase_service.dart';
 import 'auth_screen.dart';
-import 'create_event_screen.dart';
 
 class MarkerDetailsScreen extends StatefulWidget {
   final AppMarker marker;
@@ -24,6 +24,7 @@ class MarkerDetailsScreen extends StatefulWidget {
 class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   Issue? _issue;
   Event? _event;
+  Issue? _linkedIssue; // Issue linked to this event
   bool _isLoading = true;
   bool _hasVoted = false;
   int? _userVote; // -1, 1, or null
@@ -31,7 +32,6 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   bool _hasRsvped = false;
   String _rsvpStatus = 'not_going';
   Placemark? _placemark;
-  List<Event> _linkedEvents = [];
 
   @override
   void initState() {
@@ -45,21 +45,49 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         final issue = await SupabaseService.getIssueByMarkerId(widget.marker.id);
         final userVote = await SupabaseService.getUserVoteOnIssue(issue.id);
         final voteStats = await SupabaseService.getIssueVoteStats(issue.id);
-        final linkedEvents = await SupabaseService.getEventsForIssue(issue.id);
         setState(() {
           _issue = issue;
           _hasVoted = userVote != null;
           _userVote = userVote;
           _voteStats = voteStats;
-          _linkedEvents = linkedEvents;
         });
       } else {
         final event = await SupabaseService.getEventByMarkerId(
           widget.marker.id,
         );
         final rsvpStatus = await SupabaseService.getUserRsvpStatus(event.id);
+        
+        // Load linked issue if this event is a fix event
+        Issue? linkedIssue;
+        if (event.issueId != null) {
+          try {
+            // Load all issues in the area and find the one with matching ID
+            final nearbyIssues = <Issue>[];
+            final nearbyMarkers = await SupabaseService.getMarkersInBounds(
+              LatLng(widget.marker.location.latitude - 0.1, widget.marker.location.longitude - 0.1),
+              LatLng(widget.marker.location.latitude + 0.1, widget.marker.location.longitude + 0.1),
+            );
+            
+            // Load issues for each issue marker
+            for (final marker in nearbyMarkers.where((m) => m.type == MarkerType.issue)) {
+              try {
+                final issue = await SupabaseService.getIssueByMarkerId(marker.id);
+                nearbyIssues.add(issue);
+              } catch (e) {
+                print('Error loading issue for marker ${marker.id}: $e');
+              }
+            }
+            
+            // Find the issue with matching ID
+            linkedIssue = nearbyIssues.where((i) => i.id == event.issueId).firstOrNull;
+          } catch (e) {
+            print('Error loading linked issue: $e');
+          }
+        }
+        
         setState(() {
           _event = event;
+          _linkedIssue = linkedIssue;
           _hasRsvped = rsvpStatus != null;
           _rsvpStatus = rsvpStatus ?? 'not_going';
         });
@@ -121,7 +149,6 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       );
 
       widget.onDataChanged();
-      await _loadMarkerDetails(); // Refresh to get updated linked events
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -603,66 +630,6 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           ),
         ),
         
-        // Linked events section
-        if (_linkedEvents.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.event, color: Colors.green),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Fix Events',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ..._linkedEvents.map((event) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          event.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${_formatDateTime(event.startTime)} - ${_formatDateTime(event.endTime)}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        if (event.description != null) ..[
-                          const SizedBox(height: 4),
-                          Text(
-                            event.description!,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ],
-                    ),
-                  )),
-                ],
-              ),
-            ),
-          ),
-        ],
         
         // Create fix event button
         const SizedBox(height: 16),
@@ -689,6 +656,104 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Show linked issue information if this is a fix event
+        if (_linkedIssue != null) ...[
+          Card(
+            color: Colors.red.withOpacity(0.1),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Addressing Issue',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _linkedIssue!.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (_linkedIssue!.description != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_linkedIssue!.description!),
+                  ],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red),
+                        ),
+                        child: Text(
+                          _linkedIssue!.category.name.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Credibility: ${_linkedIssue!.credibilityScore}/10',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_linkedIssue!.imageUrl != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        _linkedIssue!.imageUrl!,
+                        width: double.infinity,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 150,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 30,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),

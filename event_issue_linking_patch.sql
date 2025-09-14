@@ -56,8 +56,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add RLS policy for linked events
-CREATE POLICY IF NOT EXISTS "Public linked events are viewable" ON events 
+-- Add RLS policy for linked events (drop first if exists)
+DROP POLICY IF EXISTS "Public linked events are viewable" ON events;
+CREATE POLICY "Public linked events are viewable" ON events 
 FOR SELECT USING (issue_id IS NOT NULL OR issue_id IS NULL);
 
 -- Update the existing events view policy to include issue_id

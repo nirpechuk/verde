@@ -3,12 +3,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import '../models/marker.dart';
 import '../models/event.dart';
+import '../models/issue.dart';
 import '../services/supabase_service.dart';
+import 'marker_details_screen.dart';
 import 'report_issue_screen.dart';
 import 'create_event_screen.dart';
-import 'marker_details_screen.dart';
 import 'auth_screen.dart';
 
 class MapScreen extends StatefulWidget {
@@ -23,6 +25,7 @@ class _MapScreenState extends State<MapScreen> {
   LatLng _currentLocation = const LatLng(42.3601, -71.0589); // Default to Boston/MIT area
   List<AppMarker> _markers = [];
   List<Event> _events = [];
+  List<Issue> _issues = [];
   bool _isLoading = true;
   int _userPoints = 0;
   bool _isDarkMode = false;
@@ -78,16 +81,36 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _loadMapData() async {
     try {
-      // Load markers in current view bounds
-      final southwest = LatLng(_currentLocation.latitude - 0.971, _currentLocation.longitude - 0.971);
-      final northeast = LatLng(_currentLocation.latitude + 0.971, _currentLocation.longitude + 0.971);
+      final markers = await SupabaseService.getMarkersInBounds(
+        LatLng(_currentLocation.latitude - 0.1, _currentLocation.longitude - 0.1),
+        LatLng(_currentLocation.latitude + 0.1, _currentLocation.longitude + 0.1),
+      );
+      final events = <Event>[];
+      final issues = <Issue>[];
       
-      final markers = await SupabaseService.getMarkersInBounds(southwest, northeast);
-      final events = await SupabaseService.getEvents();
-
+      // Load events and issues for each marker
+      for (final marker in markers) {
+        if (marker.type == MarkerType.event) {
+          try {
+            final event = await SupabaseService.getEventByMarkerId(marker.id);
+            events.add(event);
+          } catch (e) {
+            print('Error loading event for marker ${marker.id}: $e');
+          }
+        } else if (marker.type == MarkerType.issue) {
+          try {
+            final issue = await SupabaseService.getIssueByMarkerId(marker.id);
+            issues.add(issue);
+          } catch (e) {
+            print('Error loading issue for marker ${marker.id}: $e');
+          }
+        }
+      }
+      
       setState(() {
         _markers = markers;
         _events = events;
+        _issues = issues;
       });
     } catch (e) {
       print('Error loading map data: $e');
@@ -97,7 +120,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Marker> _buildFlutterMapMarkers() {
     List<Marker> mapMarkers = [];
 
-    // Add current location marker first (so it appears behind other markers)
+    // Add current location marker (blue)
     mapMarkers.add(
       Marker(
         point: _currentLocation,
@@ -137,41 +160,98 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
 
-    // Add issue markers (red) - these will appear on top
-    for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
-      mapMarkers.add(
-        Marker(
-          point: marker.location,
-          width: 40,
-          height: 40,
-          child: GestureDetector(
-            onTap: () => _onMarkerTapped(marker),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.warning,
-                color: Colors.white,
-                size: 20,
-              ),
+    // Filter markers: show only issues without linked events, and all events
+    List<AppMarker> filteredMarkers = [];
+    
+    // Get all issue IDs that have linked events
+    Set<String> issuesWithEvents = {};
+    for (final event in _events) {
+      if (event.issueId != null) {
+        issuesWithEvents.add(event.issueId!);
+      }
+    }
+    
+    // Add markers based on filtering logic
+    for (final marker in _markers) {
+      if (marker.type == MarkerType.issue) {
+        // Only show issue markers that don't have linked fix events
+        final issue = _issues.where((i) => i.markerId == marker.id).firstOrNull;
+        if (issue != null && !issuesWithEvents.contains(issue.id)) {
+          filteredMarkers.add(marker);
+        }
+      } else {
+        // Always show event markers
+        filteredMarkers.add(marker);
+      }
+    }
+    
+    // Group filtered markers by location to handle overlapping
+    Map<String, List<AppMarker>> markerGroups = {};
+    for (final marker in filteredMarkers) {
+      final key = '${marker.location.latitude.toStringAsFixed(6)}_${marker.location.longitude.toStringAsFixed(6)}';
+      markerGroups[key] ??= [];
+      markerGroups[key]!.add(marker);
+    }
+    
+    // Process each location group
+    for (final entry in markerGroups.entries) {
+      final markers = entry.value;
+      final location = markers.first.location;
+      
+      if (markers.length == 1) {
+        // Single marker - place normally
+        final marker = markers.first;
+        mapMarkers.add(_createSingleMarker(marker));
+      } else {
+        // Multiple markers - arrange side by side
+        for (int i = 0; i < markers.length; i++) {
+          final marker = markers[i];
+          // Offset each marker slightly to avoid overlap
+          final offsetLat = location.latitude + (i - (markers.length - 1) / 2) * 0.00005;
+          final offsetLocation = LatLng(offsetLat, location.longitude);
+          
+          mapMarkers.add(_createSingleMarker(marker, customLocation: offsetLocation));
+        }
+      }
+    }
+
+
+    return mapMarkers;
+  }
+
+  Marker _createSingleMarker(AppMarker marker, {LatLng? customLocation}) {
+    final location = customLocation ?? marker.location;
+    
+    if (marker.type == MarkerType.issue) {
+      return Marker(
+        point: location,
+        width: 40,
+        height: 40,
+        child: GestureDetector(
+          onTap: () => _onMarkerTapped(marker),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.warning,
+              color: Colors.white,
+              size: 20,
             ),
           ),
         ),
       );
-    }
-
-    // Add event markers (green)
-    for (final marker in _markers.where((m) => m.type == MarkerType.event)) {
+    } else {
+      // Event marker
       final event = _events.firstWhere(
         (e) => e.markerId == marker.id,
         orElse: () => Event(
@@ -188,39 +268,34 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
 
-      mapMarkers.add(
-        Marker(
-          point: marker.location,
-          width: 40,
-          height: 40,
-          child: GestureDetector(
-            onTap: () => _onMarkerTapped(marker),
-            child: Container(
-              decoration: BoxDecoration(
-                color: event.isActive ? Colors.lightGreen : Colors.green,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                event.isActive ? Icons.flash_on : Icons.event,
-                color: Colors.white,
-                size: 20,
-              ),
+      return Marker(
+        point: location,
+        width: 40,
+        height: 40,
+        child: GestureDetector(
+          onTap: () => _onMarkerTapped(marker),
+          child: Container(
+            decoration: BoxDecoration(
+              color: event.isActive ? Colors.lightGreen : Colors.green,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              event.isActive ? Icons.flash_on : Icons.event,
+              color: Colors.white,
+              size: 20,
             ),
           ),
         ),
       );
     }
-
-
-    return mapMarkers;
   }
 
   void _onMarkerTapped(AppMarker marker) {
