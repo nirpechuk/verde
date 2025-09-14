@@ -35,3 +35,6 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# Data
+bostondata.csv
