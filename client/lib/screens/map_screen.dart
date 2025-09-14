@@ -236,36 +236,60 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
 
-    // Add issue markers (red) - these will appear on top
+    // Add issue markers with aesthetic colors - these will appear on top
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
       mapMarkers.add(
         Marker(
           point: marker.location,
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           child: GestureDetector(
             onTap: () => _onMarkerTapped(marker),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _isDarkMode ? darkModeMedium : lightModeDark,
+                    _isDarkMode ? darkModeDark : lightModeDark.withValues(alpha: 0.8),
+                  ],
+                ),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(
+                  color: _isDarkMode ? highlight.withValues(alpha: 0.8) : Colors.white,
+                  width: 2.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                    spreadRadius: 1,
+                  ),
+                  BoxShadow(
+                    color: (_isDarkMode ? darkModeMedium : lightModeDark).withValues(alpha: 0.3),
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
-              child: const Icon(Icons.warning, color: Colors.white, size: 20),
+              alignment: Alignment.center,
+              child: Transform.translate(
+                offset: const Offset(0, -1),
+                child: Icon(
+                  Icons.warning_rounded,
+                  color: _isDarkMode ? highlight : Colors.white,
+                  size: 22,
+                ),
+              ),
             ),
           ),
         ),
       );
     }
 
-    // Add event markers (green)
+    // Add event markers with aesthetic colors
     for (final marker in _markers.where((m) => m.type == MarkerType.event)) {
       final event = _events.firstWhere(
         (e) => e.markerId == marker.id,
@@ -283,30 +307,66 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
 
+      // Different colors for active vs upcoming events
+      final isActive = event.isActive;
+      final baseColor = _isDarkMode ? darkModeMedium : lightModeMedium;
+      final accentColor = _isDarkMode ? highlight : highlight;
+
       mapMarkers.add(
         Marker(
           point: marker.location,
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           child: GestureDetector(
             onTap: () => _onMarkerTapped(marker),
             child: Container(
               decoration: BoxDecoration(
-                color: event.isActive ? Colors.lightGreen : Colors.green,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isActive ? [
+                    accentColor,
+                    accentColor.withValues(alpha: 0.8),
+                  ] : [
+                    baseColor,
+                    baseColor.withValues(alpha: 0.8),
+                  ],
+                ),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(
+                  color: isActive 
+                    ? (_isDarkMode ? darkModeDark : lightModeDark)
+                    : (_isDarkMode ? darkModeDark : Colors.white),
+                  width: 2.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                    spreadRadius: 1,
+                  ),
+                  BoxShadow(
+                    color: (isActive ? accentColor : baseColor).withValues(alpha: 0.3),
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 1),
+                  ),
+                  // Add a subtle glow for active events
+                  if (isActive) BoxShadow(
+                    color: accentColor.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 0),
+                    spreadRadius: 2,
                   ),
                 ],
               ),
+              alignment: Alignment.center,
               child: Icon(
-                event.isActive ? Icons.flash_on : Icons.event,
-                color: Colors.white,
-                size: 20,
+                isActive ? Icons.flash_on_rounded : Icons.event_rounded,
+                color: isActive 
+                  ? (_isDarkMode ? darkModeDark : lightModeDark)
+                  : (_isDarkMode ? darkModeDark : Colors.white),
+                size: 22,
               ),
             ),
           ),
