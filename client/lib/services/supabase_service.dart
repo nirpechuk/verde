@@ -107,6 +107,16 @@ class SupabaseService {
     return Issue.fromJson(response);
   }
 
+  static Future<Issue> getIssueById(String issueId) async {
+    final response = await _client
+        .from('issues')
+        .select()
+        .eq('id', issueId)
+        .single();
+
+    return Issue.fromJson(response);
+  }
+
   static Future<Issue> createIssue({
     required String markerId,
     required String title,
@@ -285,6 +295,49 @@ class SupabaseService {
     await _awardPoints('create_event', 20, response['id']);
 
     return Event.fromJson(response);
+  }
+
+  static Future<Event> createFixEventForIssue({
+    required String issueId,
+    required String issueTitle,
+    required LatLng location,
+  }) async {
+    // Create marker first
+    final marker = await createMarker(MarkerType.event, location);
+
+    // Create event with issue link
+    final eventData = {
+      'marker_id': marker.id,
+      'title': 'Fix: $issueTitle',
+      'description': 'Community event to address the reported issue: $issueTitle',
+      'category': _eventCategoryToString(EventCategory.cleanup),
+      'start_time': DateTime.now().add(const Duration(days: 1)).toIso8601String(),
+      'end_time': DateTime.now().add(const Duration(days: 1, hours: 2)).toIso8601String(),
+      'max_participants': 20,
+      'issue_id': issueId, // Link to the issue
+    };
+
+    final response = await _client
+        .from('events')
+        .insert(eventData)
+        .select()
+        .single();
+
+    // Award points for creating fix event
+    await _awardPoints('create_event', 20, response['id']);
+
+    return Event.fromJson(response);
+  }
+
+  static Future<List<String>> getIssueIdsWithLinkedEvents() async {
+    final response = await _client
+        .from('events')
+        .select('issue_id')
+        .not('issue_id', 'is', null);
+
+    return response
+        .map<String>((row) => row['issue_id'] as String)
+        .toList();
   }
 
   static Future<String?> getUserRsvpStatus(String eventId) async {

@@ -23,6 +23,7 @@ class MarkerDetailsScreen extends StatefulWidget {
 class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
   Issue? _issue;
   Event? _event;
+  Issue? _linkedIssue; // Issue linked to this event
   bool _isLoading = true;
   bool _hasVoted = false;
   int? _userVote; // -1, 1, or null
@@ -54,8 +55,20 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
           widget.marker.id,
         );
         final rsvpStatus = await SupabaseService.getUserRsvpStatus(event.id);
+        
+        // Load linked issue if this event is a fix event
+        Issue? linkedIssue;
+        if (event.issueId != null) {
+          try {
+            linkedIssue = await SupabaseService.getIssueById(event.issueId!);
+          } catch (e) {
+            print('Error loading linked issue: $e');
+          }
+        }
+        
         setState(() {
           _event = event;
+          _linkedIssue = linkedIssue;
           _hasRsvped = rsvpStatus != null;
           _rsvpStatus = rsvpStatus ?? 'not_going';
         });
@@ -84,6 +97,47 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
       setState(() {
         _placemark = null;
       });
+    }
+  }
+
+  Future<void> _createFixEvent() async {
+    if (_issue == null) return;
+
+    if (!SupabaseService.isAuthenticated) {
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthScreen(
+            actionContext: 'to create a fix event',
+          ),
+        ),
+      );
+      if (result != true) return;
+    }
+
+    try {
+      await SupabaseService.createFixEventForIssue(
+        issueId: _issue!.id,
+        issueTitle: _issue!.title,
+        location: widget.marker.location,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Fix event created successfully! +20 points'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      widget.onDataChanged();
+      Navigator.pop(context); // Go back to map
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating fix event: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -557,6 +611,22 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
             ),
           ),
         ),
+        
+        // Create fix event button
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _createFixEvent,
+            icon: const Icon(Icons.build),
+            label: const Text('Create Fix Event (+20 Points)'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -567,6 +637,104 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Show linked issue information if this is a fix event
+        if (_linkedIssue != null) ...[
+          Card(
+            color: Colors.red.withOpacity(0.1),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Addressing Issue',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _linkedIssue!.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (_linkedIssue!.description != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_linkedIssue!.description!),
+                  ],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red),
+                        ),
+                        child: Text(
+                          _linkedIssue!.category.name.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Credibility: ${_linkedIssue!.credibilityScore}/10',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_linkedIssue!.imageUrl != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        _linkedIssue!.imageUrl!,
+                        width: double.infinity,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 150,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 30,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
