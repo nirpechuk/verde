@@ -419,6 +419,7 @@ class _MapScreenState extends State<MapScreen> {
       MaterialPageRoute(
         builder: (context) => MarkerDetailsScreen(
           marker: marker,
+          isDarkMode: _isDarkMode,
           onDataChanged: () {
             _loadMapData(); // Reload map data including vote statistics
             _loadUserData(); // Reload user data as well

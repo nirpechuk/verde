@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 import '../models/marker.dart';
 import '../models/issue.dart';
 import '../models/event.dart';
 import '../services/supabase_service.dart';
 import '../helpers/utils.dart';
+import '../widgets/mini_map.dart';
 import 'auth_screen.dart';
 
 class MarkerDetailsScreen extends StatefulWidget {
   final AppMarker marker;
   final VoidCallback onDataChanged;
+  final bool isDarkMode;
 
   const MarkerDetailsScreen({
     super.key,
     required this.marker,
     required this.onDataChanged,
+    this.isDarkMode = false,
   });
 
   @override
@@ -251,7 +255,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
   Widget _buildIssueDetails() {
     if (_issue == null) return const SizedBox();
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = widget.isDarkMode;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,7 +357,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Credibility: ${_issue!.credibilityScore}/10',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontSize: 12, 
+                    color: isDarkMode ? Colors.white.withOpacity(0.7) : Colors.grey[700],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -370,7 +377,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     _issue!.description!,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                      color: isDarkMode ? Colors.white.withOpacity(0.9) : Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
@@ -452,7 +459,10 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Reported: ${_formatDate(_issue!.createdAt)}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.white.withOpacity(0.6) : Colors.grey[600],
+                  ),
                 ),
               ],
             ),
@@ -502,17 +512,30 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _placemark != null
-                      ? _formatAddress(_placemark!)
-                      : 'Loading location...',
-                  style: TextStyle(
-                    color: isDarkMode
-                        ? darkModeMedium
-                        : Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _placemark != null
+                            ? _formatAddress(_placemark!)
+                            : 'Loading location...',
+                        style: TextStyle(
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.8)
+                              : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    MiniMap(
+                      location: widget.marker.location,
+                      height: 80,
+                      width: 80,
+                      borderRadius: 8,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -538,13 +561,23 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _hasVoted ? 'Your Vote' : 'Is this issue credible?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: isDarkMode ? highlight : lightModeDark,
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.how_to_vote_rounded,
+                      color: isDarkMode ? highlight : lightModeDark,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _hasVoted ? 'Your Vote' : 'Is this issue credible?',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: isDarkMode ? highlight : lightModeDark,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
 
@@ -579,9 +612,12 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Change your vote:',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: isDarkMode ? Colors.white.withOpacity(0.6) : Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -782,7 +818,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
   Widget _buildEventDetails() {
     if (_event == null) return const SizedBox();
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = widget.isDarkMode;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,7 +920,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     _event!.description!,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isDarkMode ? darkModeMedium : Colors.grey[700],
+                      color: isDarkMode ? Colors.white.withOpacity(0.9) : Colors.grey[700],
                       height: 1.4,
                     ),
                   ),
@@ -968,22 +1004,38 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.schedule, size: 16),
+                    Icon(
+                      Icons.schedule, 
+                      size: 16,
+                      color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${_formatDateTime(_event!.startTime)} - ${_formatDateTime(_event!.endTime)}',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.people, size: 16),
+                    Icon(
+                      Icons.people, 
+                      size: 16,
+                      color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       _event!.maxParticipants != null
                           ? '${_event!.currentParticipants}/${_event!.maxParticipants} participants'
                           : '${_event!.currentParticipants} participants',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white.withOpacity(0.8) : Colors.grey[700],
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -1159,17 +1211,30 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _placemark != null
-                      ? _formatAddress(_placemark!)
-                      : 'Loading location...',
-                  style: TextStyle(
-                    color: isDarkMode
-                        ? darkModeMedium
-                        : Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _placemark != null
+                            ? _formatAddress(_placemark!)
+                            : 'Loading location...',
+                        style: TextStyle(
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.8)
+                              : Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    MiniMap(
+                      location: widget.marker.location,
+                      height: 80,
+                      width: 80,
+                      borderRadius: 8,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1196,13 +1261,23 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _hasRsvped ? 'Your RSVP' : 'Will you attend this event?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: isDarkMode ? highlight : lightModeDark,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event_available_rounded,
+                        color: isDarkMode ? highlight : lightModeDark,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _hasRsvped ? 'Your RSVP' : 'Will you attend this event?',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDarkMode ? highlight : lightModeDark,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
 
@@ -1541,7 +1616,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = widget.isDarkMode;
 
     return Scaffold(
       backgroundColor: isDarkMode ? darkModeDark : Colors.grey[50],
