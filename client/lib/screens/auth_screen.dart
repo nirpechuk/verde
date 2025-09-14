@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../helpers/utils.dart';
 
 class AuthScreen extends StatefulWidget {
-  final String?
-  actionContext; // e.g., "to report an issue" or "to create an event"
+  final String? actionContext; // e.g., "to report an issue" or "to create an event"
+  final bool isDarkMode;
 
-  const AuthScreen({super.key, this.actionContext});
+  const AuthScreen({super.key, this.actionContext, this.isDarkMode = false});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -84,167 +85,271 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isSignUp ? 'Create Account' : 'Sign In'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (widget.actionContext != null) ...[
-                Card(
-                  color: Colors.blue.withOpacity(0.1),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info, color: Colors.blue),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Sign in ${widget.actionContext}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
+      backgroundColor: widget.isDarkMode ? darkModeDark : Colors.grey[50],
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (widget.actionContext != null) ...[
+                      Container(
+                        decoration: BoxDecoration(
+                          color: widget.isDarkMode
+                              ? highlight.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: widget.isDarkMode
+                                ? highlight.withValues(alpha: 0.3)
+                                : lightModeMedium.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info,
+                                color: widget.isDarkMode ? highlight : lightModeMedium,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Sign in ${widget.actionContext}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: widget.isDarkMode ? highlight : lightModeDark,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
 
-              // App branding
-              Container(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
+                    // App branding
                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.eco,
-                        size: 48,
-                        color: Colors.white,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: widget.isDarkMode ? highlight : lightModeMedium,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.eco,
+                              size: 48,
+                              color: widget.isDarkMode ? darkModeDark : Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'EcoAction',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: widget.isDarkMode ? highlight : lightModeMedium,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'EcoAction',
+
+                    const SizedBox(height: 32),
+
+                    TextFormField(
+                      controller: _emailController,
                       style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: widget.isDarkMode ? highlight : lightModeDark,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: TextStyle(
+                          color: widget.isDarkMode ? darkModeMedium : Colors.grey[600],
+                        ),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.isDarkMode ? darkModeMedium : lightModeMedium,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.isDarkMode ? darkModeMedium : lightModeMedium,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.isDarkMode ? highlight : lightModeMedium,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: widget.isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    TextFormField(
+                      controller: _passwordController,
+                      style: TextStyle(
+                        color: widget.isDarkMode ? highlight : lightModeDark,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(
+                          color: widget.isDarkMode ? darkModeMedium : Colors.grey[600],
+                        ),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.isDarkMode ? darkModeMedium : lightModeMedium,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.isDarkMode ? darkModeMedium : lightModeMedium,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: widget.isDarkMode ? highlight : lightModeMedium,
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.lock,
+                          color: widget.isDarkMode ? darkModeMedium : lightModeMedium,
+                        ),
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Container(
+                      width: double.infinity,
+                      height: kFloatingButtonSize,
+                      decoration: BoxDecoration(
+                        color: widget.isDarkMode
+                            ? highlight.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                        border: Border.all(
+                          color: widget.isDarkMode
+                              ? highlight.withValues(alpha: 0.3)
+                              : lightModeMedium.withValues(alpha: 0.9),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                          BoxShadow(
+                            color: (widget.isDarkMode ? highlight : lightModeMedium)
+                                .withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
+                          onTap: _isLoading ? null : _authenticate,
+                          child: Container(
+                            width: double.infinity,
+                            height: kFloatingButtonSize,
+                            alignment: Alignment.center,
+                            child: _isLoading
+                                ? CircularProgressIndicator(
+                                    color: widget.isDarkMode ? highlight : lightModeMedium,
+                                  )
+                                : Text(
+                                    _isSignUp ? 'Create Account' : 'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.isDarkMode ? highlight : lightModeMedium,
+                                    ),
+                                  ),
+                          ),
+                        ),
                       ),
                     ),
-                    const Text(
-                      'Environmental crowdsourcing for good',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+
+                    const SizedBox(height: 16),
+
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSignUp = !_isSignUp;
+                        });
+                      },
+                      child: Text(
+                        _isSignUp
+                            ? 'Already have an account? Sign in'
+                            : 'Don\'t have an account? Create one',
+                        style: TextStyle(
+                          color: widget.isDarkMode ? highlight : lightModeMedium,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context, false); // Return without auth
+                      },
+                      child: Text(
+                        'Continue browsing without account',
+                        style: TextStyle(
+                          color: widget.isDarkMode ? darkModeMedium : Colors.grey[600],
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 32),
-
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              ElevatedButton(
-                onPressed: _isLoading ? null : _authenticate,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        _isSignUp ? 'Create Account' : 'Sign In',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
-
-              const SizedBox(height: 16),
-
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isSignUp = !_isSignUp;
-                  });
-                },
-                child: Text(
-                  _isSignUp
-                      ? 'Already have an account? Sign in'
-                      : 'Don\'t have an account? Create one',
-                  style: const TextStyle(color: Colors.green),
-                ),
-              ),
-
-              const Spacer(),
-
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, false); // Return without auth
-                },
-                child: const Text(
-                  'Continue browsing without account',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

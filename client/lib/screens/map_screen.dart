@@ -457,7 +457,7 @@ class _MapScreenState extends State<MapScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              const AuthScreen(actionContext: 'to report an issue'),
+              AuthScreen(actionContext: 'to report an issue', isDarkMode: _isDarkMode),
         ),
       );
 
@@ -485,7 +485,7 @@ class _MapScreenState extends State<MapScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              const AuthScreen(actionContext: 'to create an event'),
+              AuthScreen(actionContext: 'to create an event', isDarkMode: _isDarkMode),
         ),
       );
 
@@ -765,7 +765,7 @@ class _MapScreenState extends State<MapScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            const AuthScreen(),
+                                            AuthScreen(isDarkMode: _isDarkMode),
                                       ),
                                     );
                                     if (result == true) {

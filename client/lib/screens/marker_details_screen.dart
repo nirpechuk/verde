@@ -120,7 +120,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              const AuthScreen(actionContext: 'to create a fix event'),
+              AuthScreen(actionContext: 'to create a fix event', isDarkMode: widget.isDarkMode),
         ),
       );
       if (result != true) return;
@@ -160,7 +160,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              const AuthScreen(actionContext: 'to vote on this issue'),
+              AuthScreen(actionContext: 'to vote on this issue', isDarkMode: widget.isDarkMode),
         ),
       );
       if (result != true) return;
@@ -201,7 +201,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              const AuthScreen(actionContext: 'to RSVP to this event'),
+              AuthScreen(actionContext: 'to RSVP to this event', isDarkMode: widget.isDarkMode),
         ),
       );
       if (result != true) return;
