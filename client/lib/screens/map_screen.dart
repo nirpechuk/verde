@@ -399,6 +399,33 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  Future<void> _recenterMap() async {
+    try {
+      // Try to get current location
+      final permission = await Permission.location.request();
+      LatLng targetLocation;
+      
+      if (permission.isGranted) {
+        final position = await Geolocator.getCurrentPosition();
+        targetLocation = LatLng(position.latitude, position.longitude);
+        setState(() {
+          _currentLocation = targetLocation;
+        });
+      } else {
+        // Default to Boston if location permission denied
+        targetLocation = const LatLng(42.3601, -71.0589);
+      }
+      
+      // Animate to the target location
+      _mapController.move(targetLocation, 15.0);
+    } catch (e) {
+      // Fallback to Boston if any error occurs
+      const bostonLocation = LatLng(42.3601, -71.0589);
+      _mapController.move(bostonLocation, 15.0);
+      print('Recenter error: $e');
+    }
+  }
+
   Future<void> _onReportIssue() async {
     if (!SupabaseService.isAuthenticated) {
       final result = await Navigator.push<bool>(
@@ -496,38 +523,81 @@ class _MapScreenState extends State<MapScreen> {
                       MediaQuery.of(context).padding.top +
                       kFloatingButtonPadding,
                   left: kFloatingButtonPadding,
-                  child: Container(
-                    width: kFloatingButtonSize,
-                    height: kFloatingButtonSize,
-                    decoration: BoxDecoration(
-                      color: _isDarkMode ? darkModeMedium : lightModeDark,
-                      borderRadius: BorderRadius.circular(
-                        kFloatingButtonBorderRadius,
-                      ),
-                      boxShadow: kFloatingButtonShadow,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(
-                        kFloatingButtonBorderRadius,
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(
-                          kFloatingButtonBorderRadius,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Dark mode toggle button
+                      Container(
+                        width: kFloatingButtonSize,
+                        height: kFloatingButtonSize,
+                        decoration: BoxDecoration(
+                          color: _isDarkMode ? darkModeMedium : lightModeDark,
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
+                          boxShadow: kFloatingButtonShadow,
                         ),
-                        onTap: _toggleMapTheme,
-                        child: Container(
-                          width: kFloatingButtonSize,
-                          height: kFloatingButtonSize,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                            color: highlight,
-                            size: kFloatingButtonIconSize,
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(
+                              kFloatingButtonBorderRadius,
+                            ),
+                            onTap: _toggleMapTheme,
+                            child: Container(
+                              width: kFloatingButtonSize,
+                              height: kFloatingButtonSize,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                                color: highlight,
+                                size: kFloatingButtonIconSize,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      
+                      const SizedBox(width: kFloatingButtonSpacing),
+                      
+                      // Recenter button
+                      Container(
+                        width: kFloatingButtonSize,
+                        height: kFloatingButtonSize,
+                        decoration: BoxDecoration(
+                          color: _isDarkMode ? darkModeMedium : lightModeDark,
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
+                          boxShadow: kFloatingButtonShadow,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(
+                            kFloatingButtonBorderRadius,
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(
+                              kFloatingButtonBorderRadius,
+                            ),
+                            onTap: _recenterMap,
+                            child: Container(
+                              width: kFloatingButtonSize,
+                              height: kFloatingButtonSize,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.my_location,
+                                color: highlight,
+                                size: kFloatingButtonIconSize,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
