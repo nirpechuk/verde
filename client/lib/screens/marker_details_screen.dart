@@ -782,7 +782,7 @@ class _MarkerDetailsScreenState extends State<MarkerDetailsScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDarkMode 
-                  ? [darkModeMedium, darkModeDark]
+                  ? [Colors.grey[700]!, Colors.grey[800]!]
                   : [lightModeMedium, lightModeDark],
             ),
             borderRadius: BorderRadius.circular(kFloatingButtonBorderRadius),
