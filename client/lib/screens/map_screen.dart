@@ -123,6 +123,10 @@ class _MapScreenState extends State<MapScreen> {
           setState(() {
             _currentLocation = LatLng(position.latitude, position.longitude);
           });
+        } else {
+          setState(() {
+            _currentLocation = LatLng(bostonLat, bostonLng);
+          });
         }
       } catch (e) {
         // Use default location if permission denied or error
