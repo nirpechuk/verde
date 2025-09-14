@@ -145,14 +145,15 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _loadMapData() async {
     try {
+      const bound = 0.971;
       // Load markers in current view bounds
       final southwest = LatLng(
-        _currentLocation.latitude - 0.971,
-        _currentLocation.longitude - 0.971,
+        _currentLocation.latitude - bound,
+        _currentLocation.longitude - bound,
       );
       final northeast = LatLng(
-        _currentLocation.latitude + 0.971,
-        _currentLocation.longitude + 0.971,
+        _currentLocation.latitude + bound,
+        _currentLocation.longitude + bound,
       );
 
       final markers = await SupabaseService.getMarkersInBounds(
