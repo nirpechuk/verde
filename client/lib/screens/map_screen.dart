@@ -522,6 +522,9 @@ class _MapScreenState extends State<MapScreen> {
                     initialZoom: 15.0,
                     minZoom: 5.0,
                     maxZoom: 90.0,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
                     onMapEvent: (event) {
                       if (event is MapEventMoveEnd) {
                         // Optionally reload markers when map moves
