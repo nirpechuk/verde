@@ -29,6 +29,9 @@ class _MapScreenState extends State<MapScreen> {
   ); // Default to Boston/MIT area
   List<AppMarker> _markers = [];
   List<Event> _events = [];
+  // Store vote statistics for each issue marker to determine alpha transparency
+  // Map structure: markerId -> {upvotes: int, downvotes: int, total: int, score: int}
+  Map<String, Map<String, int>> _markerVoteStats = {};
   bool _isLoading = true;
   int _userPoints = 0;
   bool _isDarkMode = false;
@@ -166,8 +169,10 @@ class _MapScreenState extends State<MapScreen> {
       final issueIdsWithEvents =
           await SupabaseService.getIssueIdsWithLinkedEvents();
 
-      // Filter out issue markers that have linked fix events
+      // Filter out issue markers that have linked fix events and load vote stats
       final filteredMarkers = <AppMarker>[];
+      final Map<String, Map<String, int>> voteStats = {};
+
       for (final marker in markers) {
         if (marker.type == MarkerType.issue) {
           // Load the issue to check if it has a linked event
@@ -175,10 +180,21 @@ class _MapScreenState extends State<MapScreen> {
             final issue = await SupabaseService.getIssueByMarkerId(marker.id);
             if (!issueIdsWithEvents.contains(issue.id)) {
               filteredMarkers.add(marker);
+              // Load vote statistics for this issue marker
+              final issueVoteStats = await SupabaseService.getIssueVoteStats(
+                issue.id,
+              );
+              voteStats[marker.id] = issueVoteStats;
             }
           } catch (e) {
-            // If we can't load the issue, include the marker anyway
+            // If we can't load the issue, include the marker anyway with default vote stats
             filteredMarkers.add(marker);
+            voteStats[marker.id] = {
+              'upvotes': 0,
+              'downvotes': 0,
+              'total': 0,
+              'score': 0,
+            };
           }
         } else {
           // Always include event markers
@@ -189,6 +205,7 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         _markers = filteredMarkers;
         _events = events;
+        _markerVoteStats = voteStats;
       });
     } catch (e) {
       print('Error loading map data: $e');
@@ -239,7 +256,13 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     // Add issue markers with aesthetic colors - these will appear on top
+    // Alpha transparency is applied based on vote score for visual credibility indication
     for (final marker in _markers.where((m) => m.type == MarkerType.issue)) {
+      // Get vote statistics for this marker to determine alpha
+      final voteStats = _markerVoteStats[marker.id] ?? {'score': 0};
+      final voteScore = voteStats['score'] ?? 0;
+      final markerAlpha = _calculateMarkerAlpha(voteScore);
+
       mapMarkers.add(
         Marker(
           point: marker.location,
@@ -253,29 +276,34 @@ class _MapScreenState extends State<MapScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _isDarkMode ? darkModeMedium : lightModeDark,
-                    _isDarkMode
-                        ? darkModeDark
-                        : lightModeDark.withValues(alpha: 0.8),
+                    (_isDarkMode ? darkModeMedium : lightModeDark).withValues(
+                      alpha: markerAlpha,
+                    ),
+                    (_isDarkMode
+                            ? darkModeDark
+                            : lightModeDark.withValues(alpha: 0.8))
+                        .withValues(alpha: markerAlpha * 0.8),
                   ],
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: _isDarkMode
-                      ? highlight.withValues(alpha: 0.8)
-                      : Colors.white,
+                  color:
+                      (_isDarkMode
+                              ? highlight.withValues(alpha: 0.8)
+                              : Colors.white)
+                          .withValues(alpha: markerAlpha),
                   width: 2.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
+                    color: Colors.black.withValues(alpha: 0.25 * markerAlpha),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                     spreadRadius: 1,
                   ),
                   BoxShadow(
-                    color: (_isDarkMode ? darkModeMedium : lightModeDark)
-                        .withValues(alpha: 0.3),
+                    color: ((_isDarkMode ? darkModeMedium : lightModeDark)
+                        .withValues(alpha: 0.3 * markerAlpha)),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -286,7 +314,9 @@ class _MapScreenState extends State<MapScreen> {
                 offset: const Offset(0, -1),
                 child: Icon(
                   Icons.warning_rounded,
-                  color: _isDarkMode ? highlight : Colors.white,
+                  color: (_isDarkMode ? highlight : Colors.white).withValues(
+                    alpha: markerAlpha,
+                  ),
                   size: 22,
                 ),
               ),
@@ -387,8 +417,13 @@ class _MapScreenState extends State<MapScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            MarkerDetailsScreen(marker: marker, onDataChanged: _loadMapData),
+        builder: (context) => MarkerDetailsScreen(
+          marker: marker,
+          onDataChanged: () {
+            _loadMapData(); // Reload map data including vote statistics
+            _loadUserData(); // Reload user data as well
+          },
+        ),
       ),
     );
   }
@@ -397,6 +432,22 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       _isDarkMode = !_isDarkMode;
     });
+  }
+
+  /// Calculate alpha transparency based on vote score
+  double _calculateMarkerAlpha(int voteScore) {
+    // Issues with positive scores (>= 0) should be fully opaque
+    if (voteScore >= 0) {
+      return 1.0;
+    }
+
+    // For negative scores, gradually decrease alpha
+    const double baseAlpha = 1.0;
+    const double alphaDecrement = 0.25;
+    const double minAlpha = 0.3;
+
+    final double calculatedAlpha = baseAlpha + (voteScore * alphaDecrement);
+    return calculatedAlpha.clamp(minAlpha, baseAlpha);
   }
 
   Future<void> _onReportIssue() async {
